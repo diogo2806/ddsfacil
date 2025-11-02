@@ -18,7 +18,6 @@ import {
 import {
   CadastroEnvio,
   EnvioDds,
-  confirmarEnvio,
   criarEnvios,
   listarEnviosPorData,
 } from '../../servicos/enviosServico';
@@ -153,17 +152,6 @@ export default function App() {
       } else {
         exibirNotificacao({ tipo: 'erro', mensagem: 'Não foi possível registrar o envio.' });
       }
-    },
-  });
-
-  const mutacaoConfirmacao = useMutation({
-    mutationFn: (id: number) => confirmarEnvio(id),
-    onSuccess: () => {
-      clienteConsulta.invalidateQueries({ queryKey: ['envios', dataDashboard] });
-      exibirNotificacao({ tipo: 'sucesso', mensagem: 'Confirmação registrada.' });
-    },
-    onError: () => {
-      exibirNotificacao({ tipo: 'erro', mensagem: 'Não foi possível confirmar o DDS.' });
     },
   });
 
@@ -333,7 +321,6 @@ export default function App() {
                     <CabecalhoTabela texto="Obra" />
                     <CabecalhoTabela texto="Status" />
                     <CabecalhoTabela texto="Confirmado em" />
-                    <CabecalhoTabela texto="Ações" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -375,20 +362,6 @@ export default function App() {
                               : '---'
                           }
                         />
-                        <td className="px-6 py-4 text-sm">
-                          {confirmado ? (
-                            <span className="text-gray-400">OK</span>
-                          ) : (
-                            <button
-                              type="button"
-                              className="font-medium text-blue-600 transition hover:text-blue-800"
-                              onClick={() => mutacaoConfirmacao.mutate(envio.id)}
-                              disabled={mutacaoConfirmacao.isPending}
-                            >
-                              {mutacaoConfirmacao.isPending ? 'Confirmando...' : 'Simular Confirmação'}
-                            </button>
-                          )}
-                        </td>
                       </tr>
                     );
                   })}
@@ -769,7 +742,7 @@ type LinhaTabelaMensagemProps = {
   colunas?: number;
 };
 
-function LinhaTabelaMensagem({ mensagem, colunas = 5 }: LinhaTabelaMensagemProps) {
+function LinhaTabelaMensagem({ mensagem, colunas = 4 }: LinhaTabelaMensagemProps) {
   return (
     <tr>
       <td colSpan={colunas} className="px-6 py-8 text-center text-sm text-gray-500">

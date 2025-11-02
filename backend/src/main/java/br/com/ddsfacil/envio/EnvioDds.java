@@ -12,9 +12,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "envios_dds")
@@ -45,8 +47,10 @@ public class EnvioDds {
     @Column(nullable = false, length = 20)
     private StatusEnvioDds status;
 
-    protected EnvioDds() {
-    }
+    @Column(name = "token_acesso", nullable = false, unique = true, length = 64)
+    private String tokenAcesso;
+
+    protected EnvioDds() {}
 
     public EnvioDds(Funcionario funcionario, ConteudoDds conteudo, LocalDate dataEnvio, LocalDateTime momentoEnvio) {
         this.funcionario = funcionario;
@@ -54,6 +58,7 @@ public class EnvioDds {
         this.dataEnvio = dataEnvio;
         this.momentoEnvio = momentoEnvio;
         this.status = StatusEnvioDds.ENVIADO;
+        this.tokenAcesso = gerarToken();
     }
 
     public Long getId() {
@@ -84,8 +89,26 @@ public class EnvioDds {
         return status;
     }
 
+    public String getTokenAcesso() {
+        return tokenAcesso;
+    }
+
     public void confirmar(LocalDateTime momento) {
+        if (this.status == StatusEnvioDds.CONFIRMADO) {
+            return;
+        }
         this.status = StatusEnvioDds.CONFIRMADO;
         this.momentoConfirmacao = momento;
+    }
+
+    @PrePersist
+    void prepararPersistencia() {
+        if (this.tokenAcesso == null || this.tokenAcesso.isBlank()) {
+            this.tokenAcesso = gerarToken();
+        }
+    }
+
+    private String gerarToken() {
+        return UUID.randomUUID().toString();
     }
 }

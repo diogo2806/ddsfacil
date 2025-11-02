@@ -33,7 +33,3 @@ export async function criarEnvios(dados: CadastroEnvio): Promise<EnvioDds[]> {
   return resposta.data;
 }
 
-export async function confirmarEnvio(id: number): Promise<EnvioDds> {
-  const resposta = await clienteHttp.post<EnvioDds>(`/envios/${id}/confirmacoes`, {});
-  return resposta.data;
-}
