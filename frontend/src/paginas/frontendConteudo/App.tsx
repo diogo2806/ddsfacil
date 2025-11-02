@@ -79,28 +79,28 @@ export default function App() {
     navegador('/painel');
   }
 
-  if (telaAtual === 'divulgacao') {
-    return <TelaDivulgacao aoSolicitarLogin={tratarSolicitacaoLogin} />;
-  }
-
   const consultaConteudos = useQuery<ConteudoDds[]>({
     queryKey: ['conteudos'],
     queryFn: listarConteudos,
+    enabled: telaAtual === 'painel',
   });
 
   const consultaFuncionarios = useQuery<Funcionario[]>({
     queryKey: ['funcionarios'],
     queryFn: () => listarFuncionarios(),
+    enabled: telaAtual === 'painel',
   });
 
   const consultaObras = useQuery<string[]>({
     queryKey: ['obras'],
     queryFn: listarObras,
+    enabled: telaAtual === 'painel',
   });
 
   const consultaEnvios = useQuery<EnvioDds[]>({
     queryKey: ['envios', dataDashboard],
     queryFn: () => listarEnviosPorData(dataDashboard || undefined),
+    enabled: telaAtual === 'painel',
   });
 
   const mutacaoConteudo = useMutation({
@@ -269,6 +269,10 @@ export default function App() {
     }
     return funcionarios.filter((funcionario) => funcionario.obra === obraSelecionada);
   }, [consultaFuncionarios.data, obraSelecionada]);
+
+  if (telaAtual === 'divulgacao') {
+    return <TelaDivulgacao aoSolicitarLogin={tratarSolicitacaoLogin} />;
+  }
 
   const totalEnvios = consultaEnvios.data?.length ?? 0;
   const totalConfirmados =
