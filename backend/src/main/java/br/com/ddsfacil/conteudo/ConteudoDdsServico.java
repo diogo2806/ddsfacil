@@ -2,6 +2,7 @@ package br.com.ddsfacil.conteudo;
 
 import br.com.ddsfacil.conteudo.dto.ConteudoDdsRequisicao;
 import br.com.ddsfacil.conteudo.dto.ConteudoDdsResposta;
+import br.com.ddsfacil.excecao.RecursoNaoEncontradoException;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.jsoup.Jsoup;
@@ -37,6 +38,9 @@ public class ConteudoDdsServico {
 
     @Transactional
     public void remover(Long id) {
+        if (!conteudoRepositorio.existsById(id)) {
+            throw new RecursoNaoEncontradoException("Conteúdo não encontrado.");
+        }
         conteudoRepositorio.deleteById(id);
     }
 
