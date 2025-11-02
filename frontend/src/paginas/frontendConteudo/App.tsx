@@ -24,7 +24,15 @@ import {
 import TelaDivulgacao from './TelaDivulgacao';
 
 function sanitizarTexto(texto: string): string {
-  return texto.replace(/[<>]/g, '').trim();
+  return texto.replace(/[<>&"'`]/g, '').replace(/\s+/g, ' ').trim();
+}
+
+function sanitizarTextoMultilinha(texto: string): string {
+  return texto
+    .split('\n')
+    .map((linha) => sanitizarTexto(linha))
+    .join('\n')
+    .trim();
 }
 
 function sanitizarCelular(texto: string): string {
@@ -176,7 +184,7 @@ export default function App() {
   function aoSalvarConteudo(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     const titulo = sanitizarTexto(tituloConteudo);
-    const descricao = sanitizarTexto(descricaoConteudo);
+    const descricao = sanitizarTextoMultilinha(descricaoConteudo);
     if (!titulo || !descricao) {
       exibirNotificacao({ tipo: 'erro', mensagem: 'Preencha título e descrição para salvar.' });
       return;
