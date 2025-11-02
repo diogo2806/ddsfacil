@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   CadastroConteudo,
   ConteudoDds,
@@ -47,8 +48,12 @@ type Notificacao = {
 };
 
 export default function App() {
+  const localizacao = useLocation();
+  const navegador = useNavigate();
   const clienteConsulta = useQueryClient();
-  const [telaAtual, definirTelaAtual] = useState<'divulgacao' | 'painel'>('divulgacao');
+  const [telaAtual, definirTelaAtual] = useState<'divulgacao' | 'painel'>(() =>
+    localizacao.pathname === '/painel' ? 'painel' : 'divulgacao',
+  );
   const [abaAtiva, definirAbaAtiva] = useState<AbaPainel>('dashboard');
   const [dataDashboard, definirDataDashboard] = useState<string>(
     () => new Date().toISOString().split('T')[0],
@@ -65,8 +70,17 @@ export default function App() {
   const [notificacao, definirNotificacao] = useState<Notificacao | null>(null);
   const referenciaNotificacao = useRef<number>();
 
+  useEffect(() => {
+    definirTelaAtual(localizacao.pathname === '/painel' ? 'painel' : 'divulgacao');
+  }, [localizacao.pathname]);
+
+  function tratarSolicitacaoLogin() {
+    definirTelaAtual('painel');
+    navegador('/painel');
+  }
+
   if (telaAtual === 'divulgacao') {
-    return <TelaDivulgacao aoSolicitarLogin={() => definirTelaAtual('painel')} />;
+    return <TelaDivulgacao aoSolicitarLogin={tratarSolicitacaoLogin} />;
   }
 
   const consultaConteudos = useQuery<ConteudoDds[]>({

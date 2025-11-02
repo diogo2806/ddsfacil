@@ -14,6 +14,7 @@ createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<App />} />
+          <Route path="/painel" element={<App />} />
           <Route path="/c/:token" element={<PaginaConfirmacaoTrabalhador />} />
         </Routes>
       </BrowserRouter>
