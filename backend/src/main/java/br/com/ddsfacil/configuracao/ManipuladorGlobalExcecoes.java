@@ -1,5 +1,6 @@
 package br.com.ddsfacil.configuracao;
 
+import br.com.ddsfacil.excecao.RecursoNaoEncontradoException;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.http.HttpStatus;
@@ -19,5 +20,12 @@ public class ManipuladorGlobalExcecoes {
             mensagens.put(erro.getField(), erro.getDefaultMessage());
         }
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(mensagens);
+    }
+
+    @ExceptionHandler(RecursoNaoEncontradoException.class)
+    public ResponseEntity<Map<String, String>> tratarRecursoNaoEncontrado(RecursoNaoEncontradoException ex) {
+        Map<String, String> resposta = new HashMap<>();
+        resposta.put("mensagem", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(resposta);
     }
 }
