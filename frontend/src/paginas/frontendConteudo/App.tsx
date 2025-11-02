@@ -22,6 +22,7 @@ import {
   criarEnvios,
   listarEnviosPorData,
 } from '../../servicos/enviosServico';
+import TelaDivulgacao from './TelaDivulgacao';
 
 function sanitizarTexto(texto: string): string {
   return texto.replace(/[<>]/g, '').trim();
@@ -40,6 +41,7 @@ type Notificacao = {
 
 export default function App() {
   const clienteConsulta = useQueryClient();
+  const [telaAtual, definirTelaAtual] = useState<'divulgacao' | 'painel'>('divulgacao');
   const [abaAtiva, definirAbaAtiva] = useState<AbaPainel>('dashboard');
   const [dataDashboard, definirDataDashboard] = useState<string>(
     () => new Date().toISOString().split('T')[0],
@@ -55,6 +57,10 @@ export default function App() {
 
   const [notificacao, definirNotificacao] = useState<Notificacao | null>(null);
   const referenciaNotificacao = useRef<number>();
+
+  if (telaAtual === 'divulgacao') {
+    return <TelaDivulgacao aoSolicitarLogin={() => definirTelaAtual('painel')} />;
+  }
 
   const consultaConteudos = useQuery<ConteudoDds[]>({
     queryKey: ['conteudos'],
