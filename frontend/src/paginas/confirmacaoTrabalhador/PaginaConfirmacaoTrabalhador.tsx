@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
+import DOMPurify from 'dompurify';
 import {
   confirmarLeituraDds,
   consultarConteudoDds,
@@ -54,6 +55,8 @@ export default function PaginaConfirmacaoTrabalhador() {
   }
 
   const { titulo, descricao } = consultaConteudo.data;
+  const tituloSeguro = sanitizarTexto(titulo);
+  const descricaoSegura = sanitizarTexto(descricao);
   const confirmacaoConcluida = mutacaoConfirmacao.isSuccess;
 
   return (
@@ -64,8 +67,8 @@ export default function PaginaConfirmacaoTrabalhador() {
       </header>
 
       <article className="rounded-xl border border-gray-200 bg-white p-6 shadow">
-        <h2 className="text-xl font-semibold text-gray-900">{titulo}</h2>
-        <p className="mt-4 whitespace-pre-line text-base text-gray-700">{descricao}</p>
+        <h2 className="text-xl font-semibold text-gray-900">{tituloSeguro}</h2>
+        <p className="mt-4 whitespace-pre-line text-base text-gray-700">{descricaoSegura}</p>
       </article>
 
       <div className="mt-6">
@@ -117,4 +120,8 @@ function MensagemEstado({ titulo, descricao }: MensagemEstadoProps) {
       <p className="mt-3 text-sm text-gray-600">{descricao}</p>
     </div>
   );
+}
+
+function sanitizarTexto(valor: string): string {
+  return DOMPurify.sanitize(valor, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }).trim();
 }
