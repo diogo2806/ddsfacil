@@ -4,6 +4,7 @@ import br.com.ddsfacil.conteudo.ConteudoDds;
 import br.com.ddsfacil.conteudo.ConteudoDdsRepositorio;
 import br.com.ddsfacil.envio.dto.EnvioDdsRequisicao;
 import br.com.ddsfacil.envio.dto.EnvioDdsResposta;
+import br.com.ddsfacil.envio.sms.EnvioSmsAssincrono;
 import br.com.ddsfacil.excecao.RecursoNaoEncontradoException;
 import br.com.ddsfacil.funcionario.Funcionario;
 import br.com.ddsfacil.funcionario.FuncionarioRepositorio;
@@ -22,15 +23,18 @@ public class EnvioDdsServico {
     private final EnvioDdsRepositorio envioRepositorio;
     private final FuncionarioRepositorio funcionarioRepositorio;
     private final ConteudoDdsRepositorio conteudoRepositorio;
+    private final EnvioSmsAssincrono envioSmsAssincrono;
 
     public EnvioDdsServico(
         EnvioDdsRepositorio envioRepositorio,
         FuncionarioRepositorio funcionarioRepositorio,
-        ConteudoDdsRepositorio conteudoRepositorio
+        ConteudoDdsRepositorio conteudoRepositorio,
+        EnvioSmsAssincrono envioSmsAssincrono
     ) {
         this.envioRepositorio = envioRepositorio;
         this.funcionarioRepositorio = funcionarioRepositorio;
         this.conteudoRepositorio = conteudoRepositorio;
+        this.envioSmsAssincrono = envioSmsAssincrono;
     }
 
     @Transactional
@@ -73,6 +77,7 @@ public class EnvioDdsServico {
         }
 
         List<EnvioDds> salvos = envioRepositorio.saveAll(novosEnvios);
+        envioSmsAssincrono.enviarMensagens(salvos);
         return salvos.stream().map(this::mapearParaResposta).toList();
     }
 

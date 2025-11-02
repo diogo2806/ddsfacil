@@ -9,5 +9,11 @@ public interface EnvioDdsRepositorio extends JpaRepository<EnvioDds, Long> {
 
     List<EnvioDds> findByDataEnvioOrderByMomentoEnvioAsc(LocalDate dataEnvio);
 
-    Optional<EnvioDds> findByDataEnvioAndFuncionarioIdAndConteudoId(LocalDate dataEnvio, Long funcionarioId, Long conteudoId);
+    Optional<EnvioDds> findByDataEnvioAndFuncionarioIdAndConteudoId(
+        LocalDate dataEnvio,
+        Long funcionarioId,
+        Long conteudoId
+    );
+
+    Optional<EnvioDds> findByTokenAcesso(String tokenAcesso);
 }
