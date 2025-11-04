@@ -13,7 +13,7 @@ services:
       POSTGRES_DB: ddsfacil_db
     ports:
       # Mapeia a porta 5432 do seu PC para a porta 5432 do container
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       # Garante que os dados do banco persistam se o container for recriado
       - ddsfacil-pg-data:/var/lib/postgresql/data
