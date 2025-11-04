@@ -55,6 +55,11 @@ export async function removerTipoLocal(id: number): Promise<void> {
   await clienteHttp.delete(`/api/tipos-local/${id}`);
 }
 
+export async function atualizarTipoLocal(id: number, nome: string): Promise<TipoLocalAdmin> {
+  const resposta = await clienteHttp.put<TipoLocalAdmin>(`/api/tipos-local/${id}`, { nome });
+  return resposta.data;
+}
+
 export type LocalTrabalhoRequest = {
   nome: string;
   tipoLocalId: number;
@@ -67,4 +72,9 @@ export async function criarLocalTrabalho(dados: LocalTrabalhoRequest): Promise<L
 
 export async function removerLocalTrabalho(id: number): Promise<void> {
   await clienteHttp.delete(`/api/locais-trabalho/${id}`);
+}
+
+export async function atualizarLocalTrabalho(id: number, dados: LocalTrabalhoRequest): Promise<LocalTrabalho> {
+  const resposta = await clienteHttp.put<LocalTrabalho>(`/api/locais-trabalho/${id}`, dados);
+  return resposta.data;
 }

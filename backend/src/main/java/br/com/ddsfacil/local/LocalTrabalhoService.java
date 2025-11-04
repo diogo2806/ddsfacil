@@ -51,4 +51,18 @@ public class LocalTrabalhoService {
         // TODO: Adicionar verificação se o local está em uso por algum funcionário antes de excluir
         localTrabalhoRepository.deleteById(id);
     }
+
+    @Transactional
+    public LocalTrabalhoResponse atualizar(Long id, LocalTrabalhoRequest request) {
+        Objects.requireNonNull(request, "Requisição não pode ser nula.");
+        LocalTrabalho existente = localTrabalhoRepository.findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Local de trabalho não encontrado."));
+        TipoLocal tipoLocal = tipoLocalRepository.findById(request.getTipoLocalId())
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Tipo de local não encontrado."));
+
+        existente.setNome(request.getNome());
+        existente.setTipoLocal(tipoLocal);
+        LocalTrabalho salvo = localTrabalhoRepository.save(existente);
+        return new LocalTrabalhoResponse(salvo);
+    }
 }

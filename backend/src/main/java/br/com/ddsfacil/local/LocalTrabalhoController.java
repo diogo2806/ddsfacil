@@ -37,6 +37,12 @@ public class LocalTrabalhoController {
         return localTrabalhoService.criar(requisicao);
     }
 
+    @PutMapping("/{id}")
+    @Operation(summary = "Atualiza um local de trabalho existente")
+    public LocalTrabalhoResponse atualizar(@PathVariable Long id, @Valid @RequestBody LocalTrabalhoRequest requisicao) {
+        return localTrabalhoService.atualizar(id, requisicao);
+    }
+
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Remove um local de trabalho pelo ID")

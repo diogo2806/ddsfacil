@@ -1,5 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { listarTiposLocalAdmin, criarTipoLocal, removerTipoLocal, listarLocaisTrabalho, criarLocalTrabalho, removerLocalTrabalho, TipoLocalAdmin, LocalTrabalho } from '../servicos/localTrabalhoServico';
+import {
+  listarTiposLocalAdmin,
+  criarTipoLocal,
+  removerTipoLocal,
+  atualizarTipoLocal,
+  listarLocaisTrabalho,
+  criarLocalTrabalho,
+  removerLocalTrabalho,
+  atualizarLocalTrabalho,
+  TipoLocalAdmin,
+  LocalTrabalho,
+} from '../servicos/localTrabalhoServico';
 
 export function useLocalAdmin() {
   const clienteConsulta = useQueryClient();
@@ -24,6 +35,11 @@ export function useLocalAdmin() {
     onSuccess: () => clienteConsulta.invalidateQueries({ queryKey: ['tiposLocalAdmin'] }),
   });
 
+  const mutacaoAtualizarTipo = useMutation({
+    mutationFn: ({ id, nome }: { id: number; nome: string }) => atualizarTipoLocal(id, nome),
+    onSuccess: () => clienteConsulta.invalidateQueries({ queryKey: ['tiposLocalAdmin'] }),
+  });
+
   const mutacaoCriarLocal = useMutation({
     mutationFn: (dados: { nome: string; tipoLocalId: number }) => criarLocalTrabalho(dados),
     onSuccess: () => clienteConsulta.invalidateQueries({ queryKey: ['locais-trabalho'] }),
@@ -34,6 +50,12 @@ export function useLocalAdmin() {
     onSuccess: () => clienteConsulta.invalidateQueries({ queryKey: ['locais-trabalho'] }),
   });
 
+  const mutacaoAtualizarLocal = useMutation({
+    mutationFn: ({ id, dados }: { id: number; dados: { nome: string; tipoLocalId: number } }) =>
+      atualizarLocalTrabalho(id, dados),
+    onSuccess: () => clienteConsulta.invalidateQueries({ queryKey: ['locais-trabalho'] }),
+  });
+
   return {
     consultaTipos,
     consultaLocais,
@@ -41,5 +63,7 @@ export function useLocalAdmin() {
     mutacaoRemoverTipo,
     mutacaoCriarLocal,
     mutacaoRemoverLocal,
+    mutacaoAtualizarLocal,
+    mutacaoAtualizarTipo,
   };
 }
