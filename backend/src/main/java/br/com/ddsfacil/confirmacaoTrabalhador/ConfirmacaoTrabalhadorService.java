@@ -1,7 +1,7 @@
 package br.com.ddsfacil.confirmacaoTrabalhador;
 
-import br.com.ddsfacil.confirmacaoTrabalhador.dto.ConfirmacaoTrabalhadorConfirmacaoResposta;
-import br.com.ddsfacil.confirmacaoTrabalhador.dto.ConfirmacaoTrabalhadorResposta;
+import br.com.ddsfacil.confirmacaoTrabalhador.dto.ConfirmacaoTrabalhadorConfirmacaoResponse;
+import br.com.ddsfacil.confirmacaoTrabalhador.dto.ConfirmacaoTrabalhadorResponse;
 import br.com.ddsfacil.envio.EnvioDdsEntity;
 import br.com.ddsfacil.envio.EnvioDdsRepository;
 import br.com.ddsfacil.excecao.RecursoNaoEncontradoException;
@@ -12,27 +12,27 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class ConfirmacaoTrabalhadorServico {
+public class ConfirmacaoTrabalhadorService {
 
     private final EnvioDdsRepository envioRepositorio;
 
-    public ConfirmacaoTrabalhadorServico(EnvioDdsRepository envioRepositorio) {
+    public ConfirmacaoTrabalhadorService(EnvioDdsRepository envioRepositorio) {
         this.envioRepositorio = envioRepositorio;
     }
 
     @Transactional(readOnly = true)
-    public ConfirmacaoTrabalhadorResposta buscarPorToken(String tokenAcesso) {
+    public ConfirmacaoTrabalhadorResponse buscarPorToken(String tokenAcesso) {
         EnvioDdsEntity envio = localizarPorToken(tokenAcesso);
         String titulo = Jsoup.clean(envio.getConteudo().getTitulo(), Safelist.none()).strip();
         String descricao = Jsoup.clean(envio.getConteudo().getDescricao(), Safelist.none()).strip();
-        return new ConfirmacaoTrabalhadorResposta(titulo, descricao);
+        return new ConfirmacaoTrabalhadorResponse(titulo, descricao);
     }
 
     @Transactional
-    public ConfirmacaoTrabalhadorConfirmacaoResposta confirmarPorToken(String tokenAcesso, LocalDateTime momento) {
+    public ConfirmacaoTrabalhadorConfirmacaoResponse confirmarPorToken(String tokenAcesso, LocalDateTime momento) {
         EnvioDdsEntity envio = localizarPorToken(tokenAcesso);
         envio.confirmar(momento);
-        return new ConfirmacaoTrabalhadorConfirmacaoResposta(envio.getStatus(), envio.getMomentoConfirmacao());
+        return new ConfirmacaoTrabalhadorConfirmacaoResponse(envio.getStatus(), envio.getMomentoConfirmacao());
     }
 
     private EnvioDdsEntity localizarPorToken(String tokenAcesso) {

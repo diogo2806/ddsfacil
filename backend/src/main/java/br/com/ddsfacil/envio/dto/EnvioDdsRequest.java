@@ -1,4 +1,4 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/envio/dto/EnvioDdsRequisicao.java
+// Arquivo: backend/src/main/java/br/com/ddsfacil/envio/dto/EnvioDdsRequest.java
 package br.com.ddsfacil.envio.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -7,9 +7,13 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 import java.util.List;
+import lombok.Getter;
+import lombok.Setter;
 
 @Schema(description = "DTO para registrar um novo envio de DDS")
-public class EnvioDdsRequisicao {
+@Getter
+@Setter
+public class EnvioDdsRequest {
 
     @NotNull(message = "O conteúdo é obrigatório.")
     @Schema(description = "ID do conteúdo a ser enviado", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
@@ -22,28 +26,4 @@ public class EnvioDdsRequisicao {
 
     @Schema(description = "Data do envio (opcional, padrão: data atual)", example = "2025-11-04")
     private LocalDate dataEnvio;
-
-    public Long getConteudoId() {
-        return conteudoId;
-    }
-
-    public void setConteudoId(Long conteudoId) {
-        this.conteudoId = conteudoId;
-    }
-
-    public List<Long> getFuncionariosIds() {
-        return funcionariosIds;
-    }
-
-    public void setFuncionariosIds(List<Long> funcionariosIds) {
-        this.funcionariosIds = funcionariosIds;
-    }
-
-    public LocalDate getDataEnvio() {
-        return dataEnvio;
-    }
-
-    public void setDataEnvio(LocalDate dataEnvio) {
-        this.dataEnvio = dataEnvio;
-    }
 }

@@ -1,10 +1,12 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/conteudo/dto/ConteudoDdsResposta.java
+// Arquivo: backend/src/main/java/br/com/ddsfacil/conteudo/dto/ConteudoDdsResponse.java
 package br.com.ddsfacil.conteudo.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Getter;
 
 @Schema(description = "DTO para resposta de um conteúdo de DDS")
-public class ConteudoDdsResposta {
+@Getter
+public class ConteudoDdsResponse {
 
     @Schema(description = "ID único do conteúdo", example = "1")
     private final Long id;
@@ -27,7 +29,7 @@ public class ConteudoDdsResposta {
     @Schema(description = "Caminho do arquivo (se tipo ARQUIVO)", example = "/uploads/12345-manual.pdf")
     private final String arquivoPath;
 
-    public ConteudoDdsResposta(Long id, String titulo, String descricao, String tipo, String url, String arquivoNome, String arquivoPath) {
+    public ConteudoDdsResponse(Long id, String titulo, String descricao, String tipo, String url, String arquivoNome, String arquivoPath) {
         this.id = id;
         this.titulo = titulo;
         this.descricao = descricao;
@@ -35,33 +37,5 @@ public class ConteudoDdsResposta {
         this.url = url;
         this.arquivoNome = arquivoNome;
         this.arquivoPath = arquivoPath;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getTitulo() {
-        return titulo;
-    }
-
-    public String getDescricao() {
-        return descricao;
-    }
-
-    public String getTipo() {
-        return tipo;
-    }
-
-    public String getUrl() {
-        return url;
-    }
-
-    public String getArquivoNome() {
-        return arquivoNome;
-    }
-
-    public String getArquivoPath() {
-        return arquivoPath;
     }
 }

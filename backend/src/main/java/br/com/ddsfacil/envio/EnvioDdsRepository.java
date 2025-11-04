@@ -1,3 +1,4 @@
+// Arquivo: backend/src/main/java/br/com/ddsfacil/envio/EnvioDdsRepository.java
 package br.com.ddsfacil.envio;
 
 import java.time.LocalDate;
@@ -5,15 +6,17 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface EnvioDdsRepositorio extends JpaRepository<EnvioDds, Long> {
+// ...
+public interface EnvioDdsRepository extends JpaRepository<EnvioDdsEntity, Long> {
 
-    List<EnvioDds> findByDataEnvioOrderByMomentoEnvioAsc(LocalDate dataEnvio);
+    List<EnvioDdsEntity> findByDataEnvioOrderByMomentoEnvioAsc(LocalDate dataEnvio);
 
-    Optional<EnvioDds> findByDataEnvioAndFuncionarioIdAndConteudoId(
-        LocalDate dataEnvio,
-        Long funcionarioId,
-        Long conteudoId
+    // CORREÇÃO: Renomear de 'FuncionarioId' para 'FuncionarioEntityId'
+    Optional<EnvioDdsEntity> findByDataEnvioAndFuncionarioEntityIdAndConteudoId(
+            LocalDate dataEnvio,
+            Long funcionarioId,
+            Long conteudoId
     );
 
-    Optional<EnvioDds> findByTokenAcesso(String tokenAcesso);
+    Optional<EnvioDdsEntity> findByTokenAcesso(String tokenAcesso);
 }

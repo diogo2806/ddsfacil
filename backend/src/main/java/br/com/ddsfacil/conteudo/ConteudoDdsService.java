@@ -1,8 +1,8 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/conteudo/ConteudoDdsServico.java
+// Arquivo: backend/src/main/java/br/com/ddsfacil/conteudo/ConteudoDdsService.java
 package br.com.ddsfacil.conteudo;
 
-import br.com.ddsfacil.conteudo.dto.ConteudoDdsRequisicao;
-import br.com.ddsfacil.conteudo.dto.ConteudoDdsResposta;
+import br.com.ddsfacil.conteudo.dto.ConteudoDdsRequest;
+import br.com.ddsfacil.conteudo.dto.ConteudoDdsResponse;
 import br.com.ddsfacil.excecao.RecursoNaoEncontradoException;
 import java.util.List;
 import java.util.Objects;
@@ -15,17 +15,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class ConteudoDdsServico {
+public class ConteudoDdsService {
 
-    private static final Logger log = LoggerFactory.getLogger(ConteudoDdsServico.class);
-    private final ConteudoDdsRepositorio conteudoRepositorio;
+    private static final Logger log = LoggerFactory.getLogger(ConteudoDdsService.class);
+    private final ConteudoDdsRepository conteudoRepositorio;
 
-    public ConteudoDdsServico(ConteudoDdsRepositorio conteudoRepositorio) {
+    public ConteudoDdsService(ConteudoDdsRepository conteudoRepositorio) {
         this.conteudoRepositorio = conteudoRepositorio;
     }
 
     @Transactional
-    public ConteudoDdsResposta criar(ConteudoDdsRequisicao requisicao) {
+    public ConteudoDdsResponse criar(ConteudoDdsRequest requisicao) {
         Objects.requireNonNull(requisicao, "Requisição não pode ser nula.");
 
         String tituloLimpo = sanitizarTextoCurto(requisicao.getTitulo());
@@ -41,14 +41,14 @@ public class ConteudoDdsServico {
 
         log.info("Criando novo conteúdo. Título: {}, Tipo: {}", tituloLimpo, tipoEnum);
 
-        ConteudoDds conteudo = new ConteudoDds(tituloLimpo, descricaoLimpa, tipoEnum, url, arquivoNome, arquivoPath);
-        ConteudoDds salvo = conteudoRepositorio.save(conteudo);
+        ConteudoDdsEntity conteudo = new ConteudoDdsEntity(tituloLimpo, descricaoLimpa, tipoEnum, url, arquivoNome, arquivoPath);
+        ConteudoDdsEntity salvo = conteudoRepositorio.save(conteudo);
         log.info("Conteúdo criado com ID: {}", salvo.getId());
         return mapearParaResposta(salvo);
     }
 
     @Transactional(readOnly = true)
-    public List<ConteudoDdsResposta> listarTodos() {
+    public List<ConteudoDdsResponse> listarTodos() {
         return conteudoRepositorio.findAll().stream()
                 .map(this::mapearParaResposta)
                 .collect(Collectors.toList());
@@ -65,8 +65,8 @@ public class ConteudoDdsServico {
         log.info("Conteúdo ID: {} removido com sucesso.", id);
     }
 
-    private ConteudoDdsResposta mapearParaResposta(ConteudoDds conteudo) {
-        return new ConteudoDdsResposta(
+    private ConteudoDdsResponse mapearParaResposta(ConteudoDdsEntity conteudo) {
+        return new ConteudoDdsResponse(
                 conteudo.getId(),
                 conteudo.getTitulo(),
                 conteudo.getDescricao(),

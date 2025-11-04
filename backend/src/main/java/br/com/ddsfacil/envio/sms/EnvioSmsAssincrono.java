@@ -1,6 +1,6 @@
 package br.com.ddsfacil.envio.sms;
 
-import br.com.ddsfacil.envio.EnvioDds;
+import br.com.ddsfacil.envio.EnvioDdsEntity;
 import br.com.ddsfacil.integracao.sms.IntegracaoSmsPropriedades;
 import br.com.ddsfacil.integracao.sms.ServicoSms;
 import java.util.List;
@@ -26,7 +26,7 @@ public class EnvioSmsAssincrono {
     }
 
     @Async
-    public void enviarMensagens(List<EnvioDds> envios) {
+    public void enviarMensagens(List<EnvioDdsEntity> envios) {
         if (envios == null || envios.isEmpty()) {
             return;
         }
@@ -35,11 +35,11 @@ public class EnvioSmsAssincrono {
             return;
         }
         String urlBase = normalizarUrlBase(propriedades.getUrlBaseConfirmacao());
-        for (EnvioDds envio : envios) {
+        for (EnvioDdsEntity envio : envios) {
             try {
-                String numeroDestino = sanitizarNumero(envio.getFuncionario().getCelular());
+                String numeroDestino = sanitizarNumero(envio.getFuncionarioEntity().getCelular());
                 if (!StringUtils.hasText(numeroDestino)) {
-                    LOGGER.warn("Número de telefone inválido para o funcionário {}.", envio.getFuncionario().getId());
+                    LOGGER.warn("Número de telefone inválido para o funcionário {}.", envio.getFuncionarioEntity().getId());
                     continue;
                 }
                 String titulo = Jsoup.clean(envio.getConteudo().getTitulo(), Safelist.none()).strip();

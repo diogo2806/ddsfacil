@@ -1,27 +1,13 @@
+// Arquivo: frontend/src/paginas/frontendConteudo/App.tsx
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+// react-query usage moved into hooks
 import { useLocation, useNavigate } from 'react-router-dom';
-import {
-  CadastroConteudo,
-  ConteudoDds,
-  criarConteudo,
-  listarConteudos,
-  removerConteudo,
-} from '../../servicos/conteudosServico';
-import {
-  CadastroFuncionario,
-  Funcionario,
-  criarFuncionario,
-  listarFuncionarios,
-  listarObras,
-  removerFuncionario,
-} from '../../servicos/funcionariosServico';
-import {
-  CadastroEnvio,
-  EnvioDds,
-  criarEnvios,
-  listarEnviosPorData,
-} from '../../servicos/enviosServico';
+import { useConteudos } from '../../hooks/useConteudos';
+import { useFuncionarios } from '../../hooks/useFuncionarios';
+import { useLocais } from '../../hooks/useLocais';
+import { useEnvios } from '../../hooks/useEnvios';
+import { useLocalAdmin } from '../../hooks/useLocalAdmin';
+import type { TipoLocalAdmin, LocalTrabalho } from '../../servicos/localTrabalhoServico';
 import TelaDivulgacao from './TelaDivulgacao';
 
 function sanitizarTexto(texto: string): string {
@@ -50,7 +36,7 @@ type Notificacao = {
 export default function App() {
   const localizacao = useLocation();
   const navegador = useNavigate();
-  const clienteConsulta = useQueryClient();
+  // clienteConsulta moved to hooks; App não precisa direto do queryClient
   const [telaAtual, definirTelaAtual] = useState<'divulgacao' | 'painel'>(() =>
     localizacao.pathname === '/painel' ? 'painel' : 'divulgacao',
   );
@@ -58,15 +44,23 @@ export default function App() {
   const [dataDashboard, definirDataDashboard] = useState<string>(
     () => new Date().toISOString().split('T')[0],
   );
-  const [obraSelecionada, definirObraSelecionada] = useState<string>('todos');
+  // [REATORADO] Estado para localId (string 'todos' ou '1', '2', etc.)
+  const [localIdSelecionado, definirLocalIdSelecionado] = useState<string>('todos');
 
   const [tituloConteudo, definirTituloConteudo] = useState('');
   const [descricaoConteudo, definirDescricaoConteudo] = useState('');
+  const [tipoConteudo, definirTipoConteudo] = useState<'TEXTO' | 'LINK' | 'ARQUIVO'>('TEXTO');
+  const [urlConteudo, definirUrlConteudo] = useState('');
+  const [arquivoConteudo, definirArquivoConteudo] = useState<File | null>(null);
 
   const [nomeFuncionario, definirNomeFuncionario] = useState('');
   const [celularFuncionario, definirCelularFuncionario] = useState('');
-  const [obraFuncionario, definirObraFuncionario] = useState('');
-
+  // [REATORADO] Estado para o ID do local no formulário (string vazia ou '1', '2', etc.)
+  const [localIdFuncionario, definirLocalIdFuncionario] = useState<string>('');
+  // estados para criar tipoLocal e local
+  const [novoTipoLocal, definirNovoTipoLocal] = useState('');
+  const [novoLocalNome, definirNovoLocalNome] = useState('');
+  const [novoLocalTipoId, definirNovoLocalTipoId] = useState<number | ''>('');
   const [notificacao, definirNotificacao] = useState<Notificacao | null>(null);
   const referenciaNotificacao = useRef<number>();
 
@@ -79,103 +73,30 @@ export default function App() {
     navegador('/painel');
   }
 
-  const consultaConteudos = useQuery<ConteudoDds[]>({
-    queryKey: ['conteudos'],
-    queryFn: listarConteudos,
-    enabled: telaAtual === 'painel',
-  });
+  // Conteúdos
+  const {
+    consultaConteudos,
+    mutacaoCriar: mutacaoCriarConteudo,
+    mutacaoCriarComArquivo,
+    mutacaoRemover: mutacaoRemocaoConteudo,
+  } = useConteudos({ enabled: telaAtual === 'painel' });
+  const { consultaFuncionarios, mutacaoCriar: mutacaoFuncionario, mutacaoRemover: mutacaoRemocaoFuncionario } =
+    useFuncionarios({ enabled: telaAtual === 'painel' });
 
-  const consultaFuncionarios = useQuery<Funcionario[]>({
-    queryKey: ['funcionarios'],
-    queryFn: () => listarFuncionarios(),
-    enabled: telaAtual === 'painel',
-  });
+  // [REATORADO] Substitui consultaObras por consultaLocaisTrabalho
+  const { consultaLocaisTrabalho } = useLocais({ enabled: telaAtual === 'painel' });
 
-  const consultaObras = useQuery<string[]>({
-    queryKey: ['obras'],
-    queryFn: listarObras,
-    enabled: telaAtual === 'painel',
-  });
+  const { consultaEnvios, mutacaoCriar: mutacaoEnvio } = useEnvios({ enabled: telaAtual === 'painel' });
+  const {
+    consultaTipos,
+    consultaLocais: consultaLocaisAdmin,
+    mutacaoCriarTipo,
+    mutacaoRemoverTipo,
+    mutacaoCriarLocal,
+    mutacaoRemoverLocal,
+  } = useLocalAdmin();
 
-  const consultaEnvios = useQuery<EnvioDds[]>({
-    queryKey: ['envios', dataDashboard],
-    queryFn: () => listarEnviosPorData(dataDashboard || undefined),
-    enabled: telaAtual === 'painel',
-  });
-
-  const mutacaoConteudo = useMutation({
-    mutationFn: (dados: CadastroConteudo) => criarConteudo(dados),
-    onSuccess: () => {
-      clienteConsulta.invalidateQueries({ queryKey: ['conteudos'] });
-      definirTituloConteudo('');
-      definirDescricaoConteudo('');
-      exibirNotificacao({ tipo: 'sucesso', mensagem: 'Conteúdo salvo com sucesso.' });
-    },
-    onError: () => {
-      exibirNotificacao({ tipo: 'erro', mensagem: 'Não foi possível salvar o conteúdo.' });
-    },
-  });
-
-  const mutacaoRemocaoConteudo = useMutation({
-    mutationFn: (id: number) => removerConteudo(id),
-    onSuccess: () => {
-      clienteConsulta.invalidateQueries({ queryKey: ['conteudos'] });
-      exibirNotificacao({ tipo: 'sucesso', mensagem: 'Conteúdo removido com sucesso.' });
-    },
-    onError: () => {
-      exibirNotificacao({ tipo: 'erro', mensagem: 'Não foi possível remover o conteúdo.' });
-    },
-  });
-
-  const mutacaoFuncionario = useMutation({
-    mutationFn: (dados: CadastroFuncionario) => criarFuncionario(dados),
-    onSuccess: () => {
-      clienteConsulta.invalidateQueries({ queryKey: ['funcionarios'] });
-      clienteConsulta.invalidateQueries({ queryKey: ['obras'] });
-      definirNomeFuncionario('');
-      definirCelularFuncionario('');
-      definirObraFuncionario('');
-      exibirNotificacao({ tipo: 'sucesso', mensagem: 'Funcionário cadastrado com sucesso.' });
-    },
-    onError: () => {
-      exibirNotificacao({ tipo: 'erro', mensagem: 'Não foi possível cadastrar o funcionário.' });
-    },
-  });
-
-  const mutacaoRemocaoFuncionario = useMutation({
-    mutationFn: (id: number) => removerFuncionario(id),
-    onSuccess: () => {
-      clienteConsulta.invalidateQueries({ queryKey: ['funcionarios'] });
-      clienteConsulta.invalidateQueries({ queryKey: ['obras'] });
-      exibirNotificacao({ tipo: 'sucesso', mensagem: 'Funcionário removido com sucesso.' });
-    },
-    onError: () => {
-      exibirNotificacao({ tipo: 'erro', mensagem: 'Não foi possível remover o funcionário.' });
-    },
-  });
-
-  const mutacaoEnvio = useMutation({
-    mutationFn: (dados: CadastroEnvio) => criarEnvios(dados),
-    onSuccess: (_, variaveis) => {
-      const dataEnvio = variaveis.dataEnvio ?? new Date().toISOString().split('T')[0];
-      clienteConsulta.invalidateQueries({ queryKey: ['envios', dataEnvio] });
-      definirDataDashboard(dataEnvio);
-      definirAbaAtiva('dashboard');
-      exibirNotificacao({ tipo: 'sucesso', mensagem: 'Envio de DDS registrado com sucesso.' });
-    },
-    onError: (erro: unknown) => {
-      if (erro && typeof erro === 'object' && 'response' in erro) {
-        const resposta = erro as { response?: { data?: Record<string, string> | { mensagem?: string } } };
-        const mensagem =
-          resposta.response?.data && 'mensagem' in resposta.response.data
-            ? resposta.response.data.mensagem
-            : 'Não foi possível registrar o envio.';
-        exibirNotificacao({ tipo: 'erro', mensagem });
-      } else {
-        exibirNotificacao({ tipo: 'erro', mensagem: 'Não foi possível registrar o envio.' });
-      }
-    },
-  });
+  // mutações de funcionários e envios são providas pelos hooks (useFuncionarios e useEnvios)
 
   useEffect(() => {
     return () => {
@@ -199,23 +120,67 @@ export default function App() {
     evento.preventDefault();
     const titulo = sanitizarTexto(tituloConteudo);
     const descricao = sanitizarTextoMultilinha(descricaoConteudo);
-    if (!titulo || !descricao) {
-      exibirNotificacao({ tipo: 'erro', mensagem: 'Preencha título e descrição para salvar.' });
+    if (!titulo) {
+      exibirNotificacao({ tipo: 'erro', mensagem: 'Preencha o título para salvar.' });
       return;
     }
-    mutacaoConteudo.mutate({ titulo, descricao });
+
+    if (tipoConteudo === 'TEXTO') {
+      if (!descricao) {
+        exibirNotificacao({ tipo: 'erro', mensagem: 'Preencha a descrição para conteúdo de texto.' });
+        return;
+      }
+      mutacaoCriarConteudo.mutate({ titulo, descricao, tipo: 'TEXTO' });
+      return;
+    }
+
+    if (tipoConteudo === 'LINK') {
+      const url = urlConteudo.trim();
+      if (!url || !/^https?:\/\//i.test(url)) {
+        exibirNotificacao({ tipo: 'erro', mensagem: 'Informe uma URL válida iniciando com http:// ou https://.' });
+        return;
+      }
+      mutacaoCriarConteudo.mutate({ titulo, descricao: descricao ?? '', tipo: 'LINK', url });
+      return;
+    }
+
+    // ARQUIVO
+    if (tipoConteudo === 'ARQUIVO') {
+      if (!arquivoConteudo) {
+        exibirNotificacao({ tipo: 'erro', mensagem: 'Selecione um arquivo para upload.' });
+        return;
+      }
+      // usar mutacao customizada via serviço
+      // chamar criando diretamente pela função que faz FormData
+      (async () => {
+        try {
+          await mutacaoCriarComArquivo.mutateAsync({ dados: { titulo, descricao: descricao ?? '', tipo: 'ARQUIVO' }, arquivo: arquivoConteudo! });
+          // hook já invalida consultas; resetar campos locais
+          definirTituloConteudo('');
+          definirDescricaoConteudo('');
+          definirArquivoConteudo(null);
+          definirUrlConteudo('');
+          definirTipoConteudo('TEXTO');
+          exibirNotificacao({ tipo: 'sucesso', mensagem: 'Conteúdo com arquivo salvo com sucesso.' });
+        } catch {
+          exibirNotificacao({ tipo: 'erro', mensagem: 'Não foi possível salvar o conteúdo com arquivo.' });
+        }
+      })();
+      return;
+    }
   }
 
+  // [REATORADO]
   function aoSalvarFuncionario(evento: React.FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     const nome = sanitizarTexto(nomeFuncionario);
     const celular = sanitizarCelular(celularFuncionario);
-    const obra = sanitizarTexto(obraFuncionario);
-    if (!nome || !celular || !obra) {
-      exibirNotificacao({ tipo: 'erro', mensagem: 'Preencha todas as informações do funcionário.' });
+    // [REATORADO] Validação e envio usando localIdFuncionario
+    if (!nome || !celular || !localIdFuncionario) {
+      exibirNotificacao({ tipo: 'erro', mensagem: 'Preencha todas as informações do funcionário, incluindo o Local de Trabalho.' });
       return;
     }
-    mutacaoFuncionario.mutate({ nome, celular, obra });
+    mutacaoFuncionario.mutate({ nome, celular, localTrabalhoId: Number(localIdFuncionario) });
   }
 
   function aoRemoverFuncionario(id: number) {
@@ -242,19 +207,17 @@ export default function App() {
       | null;
     const conteudoSelecionado = campoConteudo?.value ?? '';
     const listaDestinatarios = destinatariosSelecionados;
-
     if (!conteudoSelecionado) {
       exibirNotificacao({ tipo: 'erro', mensagem: 'Selecione um conteúdo para o DDS.' });
       return;
     }
 
     if (listaDestinatarios.length === 0) {
-      exibirNotificacao({ tipo: 'erro', mensagem: 'Selecione uma obra com funcionários cadastrados.' });
+      exibirNotificacao({ tipo: 'erro', mensagem: 'Selecione um local com funcionários cadastrados.' }); // [REATORADO]
       return;
     }
 
     const dataEnvioHoje = new Date().toISOString().split('T')[0];
-
     mutacaoEnvio.mutate({
       conteudoId: Number(conteudoSelecionado),
       funcionariosIds: listaDestinatarios.map((destinatario) => destinatario.id),
@@ -262,21 +225,25 @@ export default function App() {
     });
   }
 
+  // [REATORADO] Filtra por localTrabalhoId (número)
   const destinatariosSelecionados = useMemo(() => {
     const funcionarios = consultaFuncionarios.data ?? [];
-    if (obraSelecionada === 'todos') {
+    if (localIdSelecionado === 'todos') {
       return funcionarios;
     }
-    return funcionarios.filter((funcionario) => funcionario.obra === obraSelecionada);
-  }, [consultaFuncionarios.data, obraSelecionada]);
+    const idNum = Number(localIdSelecionado);
+    return funcionarios.filter((funcionario) => funcionario.localTrabalhoId === idNum);
+  }, [consultaFuncionarios.data, localIdSelecionado]);
 
   if (telaAtual === 'divulgacao') {
     return <TelaDivulgacao aoSolicitarLogin={tratarSolicitacaoLogin} />;
   }
 
   const totalEnvios = consultaEnvios.data?.length ?? 0;
+  // A verificação de status "Confirmado" [cite: 494] está correta e alinhada com a Regra 15 (usando a descrição)
   const totalConfirmados =
-    consultaEnvios.data?.filter((envio) => envio.status === 'CONFIRMADO').length ?? 0;
+    consultaEnvios.data?.filter((envio) => envio.status === 'Confirmado').length ??
+    0;
   const totalPendentes = totalEnvios - totalConfirmados;
 
   return (
@@ -362,7 +329,8 @@ export default function App() {
                       <LinhaTabelaMensagem mensagem="Nenhum DDS enviado na data selecionada." />
                     )}
                   {consultaEnvios.data?.map((envio) => {
-                    const confirmado = envio.status === 'CONFIRMADO';
+                    // A checagem 'Confirmado' [cite: 509] está correta
+                    const confirmado = envio.status === 'Confirmado';
                     return (
                       <tr key={envio.id} className="hover:bg-gray-50">
                         <CelulaTabela texto={envio.nomeFuncionario} destaque />
@@ -421,22 +389,23 @@ export default function App() {
                   </select>
                 </div>
 
+                {/* [REATORADO] Select de Local de Trabalho */}
                 <div>
-                  <label htmlFor="obra" className="mb-2 block text-sm font-medium text-gray-700">
-                    2. Selecione os Destinatários
+                  <label htmlFor="local-trabalho-envio" className="mb-2 block text-sm font-medium text-gray-700">
+                    2. Selecione os Destinatários (Local)
                   </label>
                   <select
-                    id="obra"
-                    name="obra"
-                    value={obraSelecionada}
-                    onChange={(evento) => definirObraSelecionada(evento.target.value)}
+                    id="local-trabalho-envio"
+                    name="local-trabalho-envio"
+                    value={localIdSelecionado}
+                    onChange={(evento) => definirLocalIdSelecionado(evento.target.value)}
                     className="w-full rounded-lg border border-gray-300 bg-white p-3 text-gray-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                    disabled={consultaObras.isLoading || consultaObras.isError}
+                    disabled={consultaLocaisTrabalho.isLoading || consultaLocaisTrabalho.isError}
                   >
-                    <option value="todos">Todas as obras</option>
-                    {consultaObras.data?.map((obra) => (
-                      <option key={obra} value={obra}>
-                        {obra}
+                    <option value="todos">Todos os Locais</option>
+                    {consultaLocaisTrabalho.data?.map((local) => (
+                      <option key={local.id} value={local.id}>
+                        {local.nome} ({local.tipoLocalNome})
                       </option>
                     ))}
                   </select>
@@ -458,7 +427,7 @@ export default function App() {
 
             <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow">
               <h3 className="text-xl font-semibold text-gray-900">Destinatários do Envio</h3>
-              <p className="text-sm text-gray-500">A lista abaixo é carregada diretamente do backend.</p>
+              <p className="text-sm text-gray-500">A lista abaixo é filtrada com base na seleção.</p>
               <div className="mt-4 max-h-96 space-y-3 overflow-y-auto">
                 {consultaFuncionarios.isLoading && (
                   <p className="text-gray-500">Carregando funcionários...</p>
@@ -518,27 +487,169 @@ export default function App() {
                       placeholder="(21) 99999-8888"
                     />
                   </div>
+
+                  {/* [REATORADO] Substituído Input de Obra por Select de Local de Trabalho */}
                   <div>
-                    <label htmlFor="obra-funcionario" className="block text-sm font-medium text-gray-700">
-                      Obra
+                    <label htmlFor="local-funcionario" className="block text-sm font-medium text-gray-700">
+                      Local de Trabalho
                     </label>
-                    <input
-                      id="obra-funcionario"
-                      name="obra"
-                      value={obraFuncionario}
-                      onChange={(evento) => definirObraFuncionario(evento.target.value)}
+                    <select
+                      id="local-funcionario"
+                      name="local"
+                      value={localIdFuncionario}
+                      onChange={(evento) => definirLocalIdFuncionario(evento.target.value)}
                       className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                      maxLength={120}
-                    />
+                      disabled={consultaLocaisTrabalho.isLoading || consultaLocaisTrabalho.isError}
+                    >
+                      <option value="">Selecione...</option>
+                      {consultaLocaisTrabalho.data?.map((local) => (
+                        <option key={local.id} value={local.id}>
+                          {local.nome}
+                        </option>
+                      ))}
+                    </select>
                   </div>
+
                   <button
                     type="submit"
                     className="w-full rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
-                    disabled={mutacaoFuncionario.isPending}
+                    disabled={mutacaoFuncionario.isPending || consultaLocaisTrabalho.isLoading}
                   >
                     {mutacaoFuncionario.isPending ? 'Salvando...' : 'Salvar Funcionário'}
                   </button>
                 </form>
+
+                {/* Administração de Locais e Tipos */}
+                <div className="mt-6 border-t pt-6">
+                  <h4 className="text-lg font-semibold text-gray-900">Administrar Locais</h4>
+                  <p className="text-sm text-gray-500 mb-4">Cadastre tipos de local e locais de trabalho usados no sistema.</p>
+
+                  <div className="space-y-4">
+                    <form
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        const nome = novoTipoLocal.trim();
+                        if (!nome) {
+                          exibirNotificacao({ tipo: 'erro', mensagem: 'Informe o nome do tipo.' });
+                          return;
+                        }
+                        try {
+                          await mutacaoCriarTipo.mutateAsync(nome);
+                          definirNovoTipoLocal('');
+                          exibirNotificacao({ tipo: 'sucesso', mensagem: 'Tipo de local criado.' });
+                        } catch {
+                          exibirNotificacao({ tipo: 'erro', mensagem: 'Não foi possível criar o tipo.' });
+                        }
+                      }}
+                      className="flex gap-2"
+                    >
+                      <input
+                        className="flex-1 rounded-lg border border-gray-300 px-3 py-2"
+                        placeholder="Novo tipo (ex: Obra, Escritório)"
+                        value={novoTipoLocal}
+                        onChange={(ev) => definirNovoTipoLocal(ev.target.value)}
+                      />
+                      <button
+                        type="submit"
+                        className="rounded-lg bg-green-600 px-4 py-2 text-white"
+                        disabled={mutacaoCriarTipo.isPending}
+                      >
+                        {mutacaoCriarTipo.isPending ? 'Salvando...' : 'Criar Tipo'}
+                      </button>
+                    </form>
+
+                    <div>
+                      <h5 className="text-sm font-medium text-gray-700">Tipos cadastrados</h5>
+                      <div className="mt-2 space-y-2">
+                        {consultaTipos.isLoading && <p className="text-gray-500">Carregando tipos...</p>}
+                        {consultaTipos.isError && <p className="text-red-600">Não foi possível carregar os tipos.</p>}
+                          {consultaTipos.data?.map((tipo: TipoLocalAdmin) => (
+                          <div key={tipo.id} className="flex items-center justify-between rounded bg-gray-50 px-3 py-2">
+                            <span>{tipo.nome}</span>
+                            <button
+                              className="text-red-600 text-sm"
+                              onClick={() => {
+                                if (!confirm('Remover este tipo?')) return;
+                                mutacaoRemoverTipo.mutate(tipo.id);
+                              }}
+                              disabled={mutacaoRemoverTipo.isPending}
+                            >
+                              {mutacaoRemoverTipo.isPending ? 'Removendo...' : 'Remover'}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <form
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        const nome = novoLocalNome.trim();
+                        const tipoId = Number(novoLocalTipoId);
+                        if (!nome || !tipoId) {
+                          exibirNotificacao({ tipo: 'erro', mensagem: 'Preencha nome e tipo do local.' });
+                          return;
+                        }
+                        try {
+                          await mutacaoCriarLocal.mutateAsync({ nome, tipoLocalId: tipoId });
+                          definirNovoLocalNome('');
+                          definirNovoLocalTipoId('');
+                          exibirNotificacao({ tipo: 'sucesso', mensagem: 'Local criado.' });
+                        } catch {
+                          exibirNotificacao({ tipo: 'erro', mensagem: 'Não foi possível criar o local.' });
+                        }
+                      }}
+                      className="space-y-2"
+                    >
+                      <div className="flex gap-2">
+                        <input
+                          className="flex-1 rounded-lg border border-gray-300 px-3 py-2"
+                          placeholder="Nome do local"
+                          value={novoLocalNome}
+                          onChange={(ev) => definirNovoLocalNome(ev.target.value)}
+                        />
+                        <select
+                          value={novoLocalTipoId}
+                          onChange={(ev) => definirNovoLocalTipoId(ev.target.value ? Number(ev.target.value) : '')}
+                          className="rounded-lg border border-gray-300 px-3 py-2"
+                        >
+                          <option value="">Tipo</option>
+                          {consultaTipos.data?.map((t: TipoLocalAdmin) => (
+                            <option key={t.id} value={t.id}>{t.nome}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex gap-2">
+                        <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-white" disabled={mutacaoCriarLocal.isPending}>
+                          {mutacaoCriarLocal.isPending ? 'Salvando...' : 'Criar Local'}
+                        </button>
+                      </div>
+                    </form>
+
+                    <div>
+                      <h5 className="text-sm font-medium text-gray-700">Locais cadastrados</h5>
+                      <div className="mt-2 space-y-2">
+                        {consultaLocaisAdmin.isLoading && <p className="text-gray-500">Carregando locais...</p>}
+                        {consultaLocaisAdmin.isError && <p className="text-red-600">Não foi possível carregar os locais.</p>}
+                        {consultaLocaisAdmin.data?.map((local: LocalTrabalho) => (
+                          <div key={local.id} className="flex items-center justify-between rounded bg-gray-50 px-3 py-2">
+                            <span>{local.nome} ({local.tipoLocalNome})</span>
+                            <button
+                              className="text-red-600 text-sm"
+                              onClick={() => {
+                                if (!confirm('Remover este local?')) return;
+                                mutacaoRemoverLocal.mutate(local.id);
+                              }}
+                              disabled={mutacaoRemoverLocal.isPending}
+                            >
+                              {mutacaoRemoverLocal.isPending ? 'Removendo...' : 'Remover'}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             <div className="md:col-span-2">
@@ -553,7 +664,8 @@ export default function App() {
                       <tr>
                         <CabecalhoTabela texto="Nome" />
                         <CabecalhoTabela texto="Celular" />
-                        <CabecalhoTabela texto="Obra" />
+                        {/* [REATORADO] */}
+                        <CabecalhoTabela texto="Local de Trabalho" />
                         <CabecalhoTabela texto="Ações" />
                       </tr>
                     </thead>
@@ -576,7 +688,8 @@ export default function App() {
                         <tr key={funcionario.id} className="hover:bg-gray-50">
                           <CelulaTabela texto={funcionario.nome} destaque />
                           <CelulaTabela texto={funcionario.celular} />
-                          <CelulaTabela texto={funcionario.obra} />
+                          {/* [REATORADO] Exibe o nome do local */}
+                          <CelulaTabela texto={funcionario.localTrabalhoNome} />
                           <td className="px-6 py-4 text-sm">
                             <button
                               type="button"
@@ -619,24 +732,94 @@ export default function App() {
                     />
                   </div>
                   <div>
-                    <label htmlFor="descricao" className="block text-sm font-medium text-gray-700">
-                      Descrição
-                    </label>
-                    <textarea
-                      id="descricao"
-                      name="descricao"
-                      value={descricaoConteudo}
-                      onChange={(evento) => definirDescricaoConteudo(evento.target.value)}
-                      className="mt-1 h-32 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                      maxLength={2000}
-                    />
+                    <label className="block text-sm font-medium text-gray-700">Tipo de conteúdo</label>
+                    <div className="mt-2 flex gap-4">
+                      <label className="inline-flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="tipo"
+                          value="TEXTO"
+                          checked={tipoConteudo === 'TEXTO'}
+                          onChange={() => definirTipoConteudo('TEXTO')}
+                        />
+                        <span className="text-sm">Texto</span>
+                      </label>
+                      <label className="inline-flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="tipo"
+                          value="LINK"
+                          checked={tipoConteudo === 'LINK'}
+                          onChange={() => definirTipoConteudo('LINK')}
+                        />
+                        <span className="text-sm">Link</span>
+                      </label>
+                      <label className="inline-flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="tipo"
+                          value="ARQUIVO"
+                          checked={tipoConteudo === 'ARQUIVO'}
+                          onChange={() => definirTipoConteudo('ARQUIVO')}
+                        />
+                        <span className="text-sm">Arquivo</span>
+                      </label>
+                    </div>
                   </div>
+
+                  {tipoConteudo === 'TEXTO' && (
+                    <div>
+                      <label htmlFor="descricao" className="block text-sm font-medium text-gray-700">
+                        Descrição
+                      </label>
+                      <textarea
+                        id="descricao"
+                        name="descricao"
+                        value={descricaoConteudo}
+                        onChange={(evento) => definirDescricaoConteudo(evento.target.value)}
+                        className="mt-1 h-32 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                        maxLength={2000}
+                      />
+                    </div>
+                  )}
+
+                  {tipoConteudo === 'LINK' && (
+                    <div>
+                      <label htmlFor="url" className="block text-sm font-medium text-gray-700">
+                        URL
+                      </label>
+                      <input
+                        id="url"
+                        name="url"
+                        value={urlConteudo}
+                        onChange={(evento) => definirUrlConteudo(evento.target.value)}
+                        placeholder="https://..."
+                        className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-700 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                      />
+                    </div>
+                  )}
+
+                  {tipoConteudo === 'ARQUIVO' && (
+                    <div>
+                      <label htmlFor="arquivo" className="block text-sm font-medium text-gray-700">
+                        Arquivo
+                      </label>
+                      <input
+                        id="arquivo"
+                        name="arquivo"
+                        type="file"
+                        onChange={(e) => definirArquivoConteudo(e.target.files ? e.target.files[0] : null)}
+                        className="mt-1 w-full text-sm text-gray-700"
+                      />
+                    </div>
+                  )}
+
                   <button
                     type="submit"
                     className="w-full rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
-                    disabled={mutacaoConteudo.isPending}
+                    disabled={mutacaoCriarConteudo.isPending || mutacaoCriarComArquivo.isPending}
                   >
-                    {mutacaoConteudo.isPending ? 'Salvando...' : 'Salvar Conteúdo'}
+                    {mutacaoCriarConteudo.isPending || mutacaoCriarComArquivo.isPending ? 'Salvando...' : 'Salvar Conteúdo'}
                   </button>
                 </form>
               </div>
@@ -670,7 +853,21 @@ export default function App() {
                       <header className="flex items-start justify-between gap-4">
                         <div>
                           <h3 className="text-lg font-semibold text-gray-900">{conteudo.titulo}</h3>
-                          <p className="mt-1 text-sm text-gray-600">{conteudo.descricao}</p>
+                          {conteudo.tipo === 'LINK' && conteudo.url ? (
+                            <p className="mt-1 text-sm text-blue-600">
+                              <a href={conteudo.url} target="_blank" rel="noreferrer" className="underline">
+                                {conteudo.url}
+                              </a>
+                            </p>
+                          ) : conteudo.tipo === 'ARQUIVO' && conteudo.arquivoPath ? (
+                            <p className="mt-1 text-sm text-blue-600">
+                              <a href={conteudo.arquivoPath} target="_blank" rel="noreferrer" className="underline">
+                                {conteudo.arquivoNome ?? 'Arquivo'}
+                              </a>
+                            </p>
+                          ) : (
+                            <p className="mt-1 text-sm text-gray-600">{conteudo.descricao}</p>
+                          )}
                         </div>
                         <button
                           type="button"
@@ -708,7 +905,6 @@ type BotaoAbaProps = {
   onClick: () => void;
   children: ReactNode;
 };
-
 function BotaoAba({ ativo, onClick, children }: BotaoAbaProps) {
   return (
     <button
@@ -730,7 +926,6 @@ type CartaoResumoProps = {
   valor: number;
   corTexto: string;
 };
-
 function CartaoResumo({ titulo, valor, corTexto }: CartaoResumoProps) {
   return (
     <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow">
@@ -756,7 +951,6 @@ type CelulaTabelaProps = {
   texto: string;
   destaque?: boolean;
 };
-
 function CelulaTabela({ texto, destaque = false }: CelulaTabelaProps) {
   return (
     <td className={`px-6 py-4 text-sm ${destaque ? 'font-medium text-gray-900' : 'text-gray-600'}`}>{texto}</td>
@@ -767,7 +961,6 @@ type LinhaTabelaMensagemProps = {
   mensagem: string;
   colunas?: number;
 };
-
 function LinhaTabelaMensagem({ mensagem, colunas = 4 }: LinhaTabelaMensagemProps) {
   return (
     <tr>

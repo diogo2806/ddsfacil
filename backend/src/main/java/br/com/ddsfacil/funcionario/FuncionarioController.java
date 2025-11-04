@@ -1,8 +1,8 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/funcionario/FuncionarioControlador.java
+// Arquivo: backend/src/main/java/br/com/ddsfacil/funcionario/FuncionarioController.java
 package br.com.ddsfacil.funcionario;
 
-import br.com.ddsfacil.funcionario.dto.FuncionarioRequisicao;
-import br.com.ddsfacil.funcionario.dto.FuncionarioResposta;
+import br.com.ddsfacil.funcionario.dto.FuncionarioRequest;
+import br.com.ddsfacil.funcionario.dto.FuncionarioResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -23,37 +23,35 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/funcionarios")
 @CrossOrigin(origins = "http://localhost:5173")
 @Tag(name = "Funcionários", description = "Gerenciamento de funcionários (trabalhadores)")
-public class FuncionarioControlador {
+public class FuncionarioController {
 
-    private final FuncionarioServico funcionarioServico;
+    private final FuncionarioService funcionarioService;
 
-    public FuncionarioControlador(FuncionarioServico funcionarioServico) {
-        this.funcionarioServico = funcionarioServico;
+    public FuncionarioController(FuncionarioService funcionarioService) {
+        this.funcionarioService = funcionarioService;
     }
 
     @GetMapping
-    @Operation(summary = "Lista funcionários, opcionalmente filtrando por obra")
-    public List<FuncionarioResposta> listar(@RequestParam(name = "obra", required = false) String obra) {
-        return funcionarioServico.listar(obra);
+    @Operation(summary = "Lista funcionários, opcionalmente filtrando por ID do local de trabalho")
+    // 1. Parâmetro atualizado de 'obra' para 'localId'
+    public List<FuncionarioResponse> listar(@RequestParam(name = "localId", required = false) Long localTrabalhoId) {
+        return funcionarioService.listar(localTrabalhoId);
     }
 
-    @GetMapping("/obras")
-    @Operation(summary = "Lista os nomes de todas as obras distintas cadastradas")
-    public List<String> listarObras() {
-        return funcionarioServico.listarObras();
-    }
+    // 2. Endpoint GET /obras REMOVIDO.
+    // O frontend deve agora chamar GET /api/locais-trabalho e GET /api/tipos-local
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Cadastra um novo funcionário")
-    public FuncionarioResposta criar(@Valid @RequestBody FuncionarioRequisicao requisicao) {
-        return funcionarioServico.criar(requisicao);
+    public FuncionarioResponse criar(@Valid @RequestBody FuncionarioRequest requisicao) {
+        return funcionarioService.criar(requisicao);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Remove um funcionário pelo ID")
     public void remover(@PathVariable Long id) {
-        funcionarioServico.remover(id);
+        funcionarioService.remover(id);
     }
 }

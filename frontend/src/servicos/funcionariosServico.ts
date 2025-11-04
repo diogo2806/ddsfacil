@@ -1,35 +1,45 @@
+// Arquivo: frontend/src/servicos/funcionariosServico.ts
 import { clienteHttp } from './clienteHttp';
 
+/**
+ * [REATORADO] Alinhado com FuncionarioResponse.java
+ */
 export type Funcionario = {
   id: number;
   nome: string;
   celular: string;
-  obra: string;
+  localTrabalhoId: number;
+  localTrabalhoNome: string;
+  tipoLocalNome: string;
 };
 
+/**
+ * [REATORADO] Alinhado com FuncionarioRequest.java
+ */
 export type CadastroFuncionario = {
   nome: string;
   celular: string;
-  obra: string;
+  localTrabalhoId: number;
 };
 
-export async function listarFuncionarios(obra?: string): Promise<Funcionario[]> {
-  const resposta = await clienteHttp.get<Funcionario[]>('/funcionarios', {
-    params: obra ? { obra } : undefined,
+/**
+ * [REATORADO] O backend filtra por 'localId'
+ */
+export async function listarFuncionarios(localId?: number): Promise<Funcionario[]> {
+  const resposta = await clienteHttp.get<Funcionario[]>('/api/funcionarios', {
+    params: localId ? { localId } : undefined,
   });
   return resposta.data;
 }
 
-export async function listarObras(): Promise<string[]> {
-  const resposta = await clienteHttp.get<string[]>('/funcionarios/obras');
-  return resposta.data;
-}
+// [REMOVIDO] O método listarObras() foi removido pois o endpoint /api/funcionarios/obras
+// não existe mais no backend. Use localTrabalhoServico.ts
 
 export async function criarFuncionario(dados: CadastroFuncionario): Promise<Funcionario> {
-  const resposta = await clienteHttp.post<Funcionario>('/funcionarios', dados);
+  const resposta = await clienteHttp.post<Funcionario>('/api/funcionarios', dados);
   return resposta.data;
 }
 
 export async function removerFuncionario(id: number): Promise<void> {
-  await clienteHttp.delete(`/funcionarios/${id}`);
+  await clienteHttp.delete(`/api/funcionarios/${id}`);
 }

@@ -1,13 +1,13 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/envio/EnvioDdsServico.java
+// Arquivo: backend/src/main/java/br/com/ddsfacil/envio/EnvioDdsService.java
 package br.com.ddsfacil.envio;
 
-import br.com.ddsfacil.conteudo.ConteudoDds;
-import br.com.ddsfacil.conteudo.ConteudoDdsRepositorio;
-import br.com.ddsfacil.envio.dto.EnvioDdsRequisicao;
-import br.com.ddsfacil.envio.dto.EnvioDdsResposta;
+import br.com.ddsfacil.conteudo.ConteudoDdsEntity;
+import br.com.ddsfacil.conteudo.ConteudoDdsRepository;
+import br.com.ddsfacil.envio.dto.EnvioDdsRequest;
+import br.com.ddsfacil.envio.dto.EnvioDdsResponse;
 import br.com.ddsfacil.envio.sms.EnvioSmsAssincrono;
 import br.com.ddsfacil.excecao.RecursoNaoEncontradoException;
-import br.com.ddsfacil.funcionario.Funcionario;
+import br.com.ddsfacil.funcionario.FuncionarioEntity;
 import br.com.ddsfacil.funcionario.FuncionarioRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -23,18 +23,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class EnvioDdsServico {
+public class EnvioDdsService {
 
-    private static final Logger log = LoggerFactory.getLogger(EnvioDdsServico.class);
-    private final EnvioDdsRepositorio envioRepositorio;
+    private static final Logger log = LoggerFactory.getLogger(EnvioDdsService.class);
+    private final EnvioDdsRepository envioRepositorio;
     private final FuncionarioRepository funcionarioRepository;
-    private final ConteudoDdsRepositorio conteudoRepositorio;
+    private final ConteudoDdsRepository conteudoRepositorio;
     private final EnvioSmsAssincrono envioSmsAssincrono;
 
-    public EnvioDdsServico(
-            EnvioDdsRepositorio envioRepositorio,
+    public EnvioDdsService(
+            EnvioDdsRepository envioRepositorio,
             FuncionarioRepository funcionarioRepository,
-            ConteudoDdsRepositorio conteudoRepositorio,
+            ConteudoDdsRepository conteudoRepositorio,
             EnvioSmsAssincrono envioSmsAssincrono
     ) {
         this.envioRepositorio = envioRepositorio;
@@ -44,45 +44,48 @@ public class EnvioDdsServico {
     }
 
     @Transactional
-    public List<EnvioDdsResposta> enviar(EnvioDdsRequisicao requisicao) {
+    public List<EnvioDdsResponse> enviar(EnvioDdsRequest requisicao) {
         Objects.requireNonNull(requisicao, "Requisição não pode ser nula.");
 
-        ConteudoDds conteudo = conteudoRepositorio
+        ConteudoDdsEntity conteudo = conteudoRepositorio
                 .findById(requisicao.getConteudoId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Conteúdo não encontrado."));
 
         List<Long> idsFuncionarios = requisicao.getFuncionariosIds();
         log.info("Iniciando envio de DDS para {} funcionário(s) sobre o conteúdo ID: {}", idsFuncionarios.size(), requisicao.getConteudoId());
 
-        List<Funcionario> funcionarios = funcionarioRepository.findAllById(idsFuncionarios);
-        if (funcionarios.isEmpty()) {
+        List<FuncionarioEntity> funcionarioEntities = funcionarioRepository.findAllById(idsFuncionarios);
+        if (funcionarioEntities.isEmpty()) {
             throw new RecursoNaoEncontradoException("Nenhum funcionário encontrado para o envio informado.");
         }
         long quantidadeEsperada = idsFuncionarios.stream().distinct().count();
-        if (funcionarios.size() != quantidadeEsperada) {
+        if (funcionarioEntities.size() != quantidadeEsperada) {
             throw new RecursoNaoEncontradoException("Alguns funcionários informados não foram encontrados.");
         }
 
         LocalDate dataEnvio = requisicao.getDataEnvio() != null ? requisicao.getDataEnvio() : LocalDate.now();
-        Map<Long, Funcionario> funcionariosPorId = funcionarios
+        Map<Long, FuncionarioEntity> funcionariosPorId = funcionarioEntities
                 .stream()
-                .collect(Collectors.toMap(Funcionario::getId, funcionario -> funcionario, (primeiro, segundo) -> primeiro));
+                .collect(Collectors.toMap(FuncionarioEntity::getId, funcionarioEntity -> funcionarioEntity, (primeiro, segundo) -> primeiro));
 
-        List<EnvioDds> novosEnvios = new ArrayList<>();
+        List<EnvioDdsEntity> novosEnvios = new ArrayList<>();
         for (Long funcionarioId : idsFuncionarios) {
-            Funcionario funcionario = funcionariosPorId.get(funcionarioId);
-            if (funcionario == null) {
+            FuncionarioEntity funcionarioEntity = funcionariosPorId.get(funcionarioId);
+            if (funcionarioEntity == null) {
                 continue;
             }
+
+            // CORREÇÃO: Atualizando a chamada para o método renomeado
             boolean jaExiste = envioRepositorio
-                    .findByDataEnvioAndFuncionarioIdAndConteudoId(dataEnvio, funcionarioId, conteudo.getId())
+                    .findByDataEnvioAndFuncionarioEntityIdAndConteudoId(dataEnvio, funcionarioId, conteudo.getId())
                     .isPresent();
+
             if (jaExiste) {
                 log.warn("Envio duplicado ignorado para funcionário ID: {} e conteúdo ID: {}", funcionarioId, conteudo.getId());
                 continue;
             }
             LocalDateTime momentoEnvio = LocalDateTime.now();
-            EnvioDds envio = new EnvioDds(funcionario, conteudo, dataEnvio, momentoEnvio);
+            EnvioDdsEntity envio = new EnvioDdsEntity(funcionarioEntity, conteudo, dataEnvio, momentoEnvio);
             novosEnvios.add(envio);
         }
 
@@ -91,7 +94,7 @@ public class EnvioDdsServico {
             return List.of();
         }
 
-        List<EnvioDds> salvos = envioRepositorio.saveAll(novosEnvios);
+        List<EnvioDdsEntity> salvos = envioRepositorio.saveAll(novosEnvios);
         envioSmsAssincrono.enviarMensagens(salvos);
         log.info("Envio de {} SMSs iniciado de forma assíncrona.", salvos.size());
 
@@ -99,7 +102,7 @@ public class EnvioDdsServico {
     }
 
     @Transactional(readOnly = true)
-    public List<EnvioDdsResposta> listarPorData(LocalDate data) {
+    public List<EnvioDdsResponse> listarPorData(LocalDate data) {
         LocalDate dataConsulta = data != null ?
                 data : LocalDate.now();
         return envioRepositorio
@@ -110,9 +113,9 @@ public class EnvioDdsServico {
     }
 
     @Transactional
-    public EnvioDdsResposta confirmar(Long id) {
+    public EnvioDdsResponse confirmar(Long id) {
         log.info("Confirmando envio ID: {}", id);
-        EnvioDds envio = envioRepositorio
+        EnvioDdsEntity envio = envioRepositorio
                 .findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Envio não encontrado."));
 
@@ -125,12 +128,12 @@ public class EnvioDdsServico {
         return mapearParaResposta(envio);
     }
 
-    private EnvioDdsResposta mapearParaResposta(EnvioDds envio) {
-        return new EnvioDdsResposta(
+    private EnvioDdsResponse mapearParaResposta(EnvioDdsEntity envio) {
+        return new EnvioDdsResponse(
                 envio.getId(),
-                envio.getFuncionario().getId(),
-                envio.getFuncionario().getNome(),
-                envio.getFuncionario().getObra(),
+                envio.getFuncionarioEntity().getId(),
+                envio.getFuncionarioEntity().getNome(),
+                envio.getFuncionarioEntity().getLocalTrabalho().getNome(),
                 envio.getConteudo().getId(),
                 envio.getConteudo().getTitulo(),
                 envio.getStatus(),

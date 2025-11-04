@@ -1,4 +1,4 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/conteudo/ConteudoDds.java
+// Arquivo: backend/src/main/java/br/com/ddsfacil/conteudo/ConteudoDdsEntity.java
 package br.com.ddsfacil.conteudo;
 
 import jakarta.persistence.Column;
@@ -21,7 +21,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class ConteudoDds {
+public class ConteudoDdsEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,7 +47,7 @@ public class ConteudoDds {
     private String arquivoPath;
 
     // Construtor mantido para compatibilidade com o AllArgsConstructor gerado
-    public ConteudoDds(String titulo, String descricao, TipoConteudo tipo, String url, String arquivoNome, String arquivoPath) {
+    public ConteudoDdsEntity(String titulo, String descricao, TipoConteudo tipo, String url, String arquivoNome, String arquivoPath) {
         this.titulo = titulo;
         this.descricao = descricao;
         this.tipo = tipo;

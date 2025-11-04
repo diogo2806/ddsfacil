@@ -1,13 +1,15 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/conteudo/ConteudoDdsControlador.java
+// Arquivo: backend/src/main/java/br/com/ddsfacil/conteudo/ConteudoDdsController.java
 package br.com.ddsfacil.conteudo;
 
-import br.com.ddsfacil.conteudo.dto.ConteudoDdsRequisicao;
-import br.com.ddsfacil.conteudo.dto.ConteudoDdsResposta;
+import br.com.ddsfacil.conteudo.dto.ConteudoDdsRequest;
+import br.com.ddsfacil.conteudo.dto.ConteudoDdsResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path; // 1. Importar Path
+import java.nio.file.Paths; // 2. Importar Paths
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -28,24 +30,24 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/conteudos")
 @CrossOrigin(origins = "http://localhost:5173")
 @Tag(name = "Conteúdos DDS", description = "Gerenciamento da biblioteca de conteúdos de DDS")
-public class ConteudoDdsControlador {
+public class ConteudoDdsController {
 
-    private final ConteudoDdsServico conteudoServico;
+    private final ConteudoDdsService conteudoServico;
 
-    public ConteudoDdsControlador(ConteudoDdsServico conteudoServico) {
+    public ConteudoDdsController(ConteudoDdsService conteudoServico) {
         this.conteudoServico = conteudoServico;
     }
 
     @GetMapping
     @Operation(summary = "Lista todos os conteúdos de DDS cadastrados")
-    public List<ConteudoDdsResposta> listar() {
+    public List<ConteudoDdsResponse> listar() {
         return conteudoServico.listarTodos();
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Cria um novo conteúdo de DDS (via JSON, para Texto ou Link)")
-    public ConteudoDdsResposta criar(@Valid @RequestBody ConteudoDdsRequisicao requisicao) {
+    public ConteudoDdsResponse criar(@Valid @RequestBody ConteudoDdsRequest requisicao) {
         return conteudoServico.criar(requisicao);
     }
 
@@ -59,31 +61,41 @@ public class ConteudoDdsControlador {
     @PostMapping(path = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Cria um novo conteúdo de DDS (via Multipart-Form, para upload de Arquivo)")
-    public ConteudoDdsResposta uploadArquivo(
+    public ConteudoDdsResponse uploadArquivo(
             @RequestParam("titulo") String titulo,
             @RequestParam(value = "descricao", required = false) String descricao,
             @RequestParam(value = "tipo", required = false) String tipo,
             @RequestParam("file") MultipartFile file
     ) throws IOException {
-        // salvar arquivo em pasta uploads no working dir
 
+        // --- CORREÇÃO INICIA AQUI ---
+
+        // 3. Definir o diretório de uploads usando Path
         String uploadsDir = "uploads";
-        File uploadsFolder = new File(uploadsDir);
+        Path uploadsPath = Paths.get(uploadsDir);
+        File uploadsFolder = uploadsPath.toFile();
+
         if (!uploadsFolder.exists()) {
             uploadsFolder.mkdirs();
         }
         String original = StringUtils.cleanPath(file.getOriginalFilename());
         String targetName = System.currentTimeMillis() + "-" + original;
-        File destino = new File(uploadsFolder, targetName);
+
+        // 4. Criar o caminho de destino absoluto
+        Path destino = uploadsPath.resolve(targetName).toAbsolutePath();
+
+        // 5. Usar o método transferTo(Path)
         file.transferTo(destino);
 
+        // --- CORREÇÃO TERMINA AQUI ---
+
         // construir requisicao manualmente e delegar a serviço
-        br.com.ddsfacil.conteudo.dto.ConteudoDdsRequisicao req = new br.com.ddsfacil.conteudo.dto.ConteudoDdsRequisicao();
+        ConteudoDdsRequest req = new ConteudoDdsRequest();
         req.setTitulo(titulo);
         req.setDescricao(descricao == null ? "" : descricao);
         req.setTipo(tipo == null ? "ARQUIVO" : tipo); // O serviço fará a conversão
         req.setArquivoNome(original);
-        req.setUrl("/uploads/" + targetName);
+        req.setUrl("/uploads/" + targetName); // A URL salva no banco continua relativa (correto)
         return conteudoServico.criar(req);
     }
 }

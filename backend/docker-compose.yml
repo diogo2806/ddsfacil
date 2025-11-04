@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  # Define o serviço do banco de dados
+  db:
+    image: postgres:16-alpine
+    container_name: ddsfacil-postgres-local
+    environment:
+      # Define as credenciais que o Spring Boot usará
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      # Define o nome do banco que será criado
+      POSTGRES_DB: ddsfacil_db
+    ports:
+      # Mapeia a porta 5432 do seu PC para a porta 5432 do container
+      - "5432:5432"
+    volumes:
+      # Garante que os dados do banco persistam se o container for recriado
+      - ddsfacil-pg-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  # Declara o volume de dados
+  ddsfacil-pg-data: {}

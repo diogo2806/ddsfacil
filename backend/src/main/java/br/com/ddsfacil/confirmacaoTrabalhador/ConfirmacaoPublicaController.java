@@ -1,8 +1,8 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/confirmacaoTrabalhador/ConfirmacaoPublicaControlador.java
+// Arquivo: backend/src/main/java/br/com/ddsfacil/confirmacaoTrabalhador/ConfirmacaoPublicaController.java
 package br.com.ddsfacil.confirmacaoTrabalhador;
 
-import br.com.ddsfacil.confirmacaoTrabalhador.dto.ConfirmacaoTrabalhadorConfirmacaoResposta;
-import br.com.ddsfacil.confirmacaoTrabalhador.dto.ConfirmacaoTrabalhadorResposta;
+import br.com.ddsfacil.confirmacaoTrabalhador.dto.ConfirmacaoTrabalhadorConfirmacaoResponse;
+import br.com.ddsfacil.confirmacaoTrabalhador.dto.ConfirmacaoTrabalhadorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDateTime;
@@ -19,24 +19,24 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/public/dds")
 @CrossOrigin(origins = "*")
 @Tag(name = "Confirmação Pública", description = "Endpoints públicos para confirmação do trabalhador via token")
-public class ConfirmacaoPublicaControlador {
+public class ConfirmacaoPublicaController {
 
-    private final ConfirmacaoTrabalhadorServico confirmacaoServico;
+    private final ConfirmacaoTrabalhadorService confirmacaoServico;
 
-    public ConfirmacaoPublicaControlador(ConfirmacaoTrabalhadorServico confirmacaoServico) {
+    public ConfirmacaoPublicaController(ConfirmacaoTrabalhadorService confirmacaoServico) {
         this.confirmacaoServico = confirmacaoServico;
     }
 
     @GetMapping("/{tokenAcesso}")
     @Operation(summary = "Busca o conteúdo de um DDS por token de acesso")
-    public ConfirmacaoTrabalhadorResposta buscarPorToken(@PathVariable String tokenAcesso) {
+    public ConfirmacaoTrabalhadorResponse buscarPorToken(@PathVariable String tokenAcesso) {
         return confirmacaoServico.buscarPorToken(tokenAcesso);
     }
 
     @PostMapping("/{tokenAcesso}/confirmar")
     @ResponseStatus(HttpStatus.OK)
     @Operation(summary = "Confirma a leitura de um DDS por token de acesso")
-    public ConfirmacaoTrabalhadorConfirmacaoResposta confirmar(@PathVariable String tokenAcesso) {
+    public ConfirmacaoTrabalhadorConfirmacaoResponse confirmar(@PathVariable String tokenAcesso) {
         return confirmacaoServico.confirmarPorToken(tokenAcesso, LocalDateTime.now());
     }
 }

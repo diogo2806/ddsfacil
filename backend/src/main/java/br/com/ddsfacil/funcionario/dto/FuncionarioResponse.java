@@ -1,10 +1,13 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/funcionario/dto/FuncionarioResposta.java
+// Arquivo: backend/src/main/java/br/com/ddsfacil/funcionario/dto/FuncionarioResponse.java
 package br.com.ddsfacil.funcionario.dto;
 
+import br.com.ddsfacil.funcionario.FuncionarioEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Getter;
 
 @Schema(description = "DTO de resposta para um funcionário cadastrado")
-public class FuncionarioResposta {
+@Getter
+public class FuncionarioResponse {
 
     @Schema(description = "ID único do funcionário", example = "1")
     private final Long id;
@@ -15,29 +18,21 @@ public class FuncionarioResposta {
     @Schema(description = "Celular com DDD", example = "(21) 99999-8888")
     private final String celular;
 
-    @Schema(description = "Nome da obra ou centro de custo", example = "Obra Centro")
-    private final String obra;
+    @Schema(description = "ID do local de trabalho", example = "1")
+    private final Long localTrabalhoId;
 
-    public FuncionarioResposta(Long id, String nome, String celular, String obra) {
-        this.id = id;
-        this.nome = nome;
-        this.celular = celular;
-        this.obra = obra;
-    }
+    @Schema(description = "Nome do local de trabalho", example = "Obra Centro")
+    private final String localTrabalhoNome;
 
-    public Long getId() {
-        return id;
-    }
+    @Schema(description = "Nome do tipo de local", example = "Obra")
+    private final String tipoLocalNome;
 
-    public String getNome() {
-        return nome;
-    }
-
-    public String getCelular() {
-        return celular;
-    }
-
-    public String getObra() {
-        return obra;
+    public FuncionarioResponse(FuncionarioEntity funcionario) {
+        this.id = funcionario.getId();
+        this.nome = funcionario.getNome();
+        this.celular = funcionario.getCelular();
+        this.localTrabalhoId = funcionario.getLocalTrabalho().getId();
+        this.localTrabalhoNome = funcionario.getLocalTrabalho().getNome();
+        this.tipoLocalNome = funcionario.getLocalTrabalho().getTipoLocal().getNome();
     }
 }

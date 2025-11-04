@@ -1,9 +1,11 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/funcionario/FuncionarioServico.java
+// Arquivo: backend/src/main/java/br/com/ddsfacil/funcionario/FuncionarioService.java
 package br.com.ddsfacil.funcionario;
 
 import br.com.ddsfacil.excecao.RecursoNaoEncontradoException;
-import br.com.ddsfacil.funcionario.dto.FuncionarioRequisicao;
-import br.com.ddsfacil.funcionario.dto.FuncionarioResposta;
+import br.com.ddsfacil.funcionario.dto.FuncionarioRequest;
+import br.com.ddsfacil.funcionario.dto.FuncionarioResponse;
+import br.com.ddsfacil.local.LocalTrabalho;
+import br.com.ddsfacil.local.LocalTrabalhoRepository;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -15,63 +17,59 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class FuncionarioServico {
+public class FuncionarioService {
 
-    private static final Logger log = LoggerFactory.getLogger(FuncionarioServico.class);
-    private final FuncionarioRepositorio funcionarioRepositorio;
+    private static final Logger log = LoggerFactory.getLogger(FuncionarioService.class);
+    private final FuncionarioRepository funcionarioRepository;
+    private final LocalTrabalhoRepository localTrabalhoRepository;
 
-    public FuncionarioServico(FuncionarioRepositorio funcionarioRepositorio) {
-        this.funcionarioRepositorio = funcionarioRepositorio;
+    public FuncionarioService(FuncionarioRepository funcionarioRepository, LocalTrabalhoRepository localTrabalhoRepository) {
+        this.funcionarioRepository = funcionarioRepository;
+        this.localTrabalhoRepository = localTrabalhoRepository;
     }
 
     @Transactional
-    public FuncionarioResposta criar(FuncionarioRequisicao requisicao) {
+    public FuncionarioResponse criar(FuncionarioRequest requisicao) {
         Objects.requireNonNull(requisicao, "Requisição não pode ser nula.");
-
+        LocalTrabalho local = localTrabalhoRepository.findById(requisicao.getLocalTrabalhoId())
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Local de trabalho não encontrado."));
         String nomeLimpo = sanitizarTexto(requisicao.getNome());
         String celularLimpo = sanitizarCelular(requisicao.getCelular());
-        String obraLimpa = sanitizarTexto(requisicao.getObra());
 
-        log.info("Criando novo funcionário. Nome: {}, Obra: {}", nomeLimpo, obraLimpa);
-
-        Funcionario funcionario = new Funcionario(nomeLimpo, celularLimpo, obraLimpa);
-        Funcionario salvo = funcionarioRepositorio.save(funcionario);
+        log.info("Criando novo funcionário. Nome: {}, Local: {}", nomeLimpo, local.getNome());
+        FuncionarioEntity funcionarioEntity = new FuncionarioEntity(nomeLimpo, celularLimpo, local);
+        FuncionarioEntity salvo = funcionarioRepository.save(funcionarioEntity);
 
         log.info("Funcionário criado com ID: {}. (LGPD: Dados Pessoais envolvidos)", salvo.getId());
         return mapearParaResposta(salvo);
     }
 
     @Transactional(readOnly = true)
-    public List<FuncionarioResposta> listar(String obra) {
-        List<Funcionario> funcionarios;
-        if (obra != null && !obra.isBlank()) {
-            String obraLimpa = sanitizarTexto(obra);
-            funcionarios = funcionarioRepositorio.findByObraIgnoreCaseOrderByNomeAsc(obraLimpa);
+    public List<FuncionarioResponse> listar(Long localTrabalhoId) {
+        List<FuncionarioEntity> funcionarioEntities;
+        if (localTrabalhoId != null) {
+            // [REATORADO] Chamando o método derivado correto
+            funcionarioEntities = funcionarioRepository.findAllByLocalTrabalhoIdOrderByNomeAsc(localTrabalhoId);
         } else {
-            funcionarios = funcionarioRepositorio.findAllByOrderByNomeAsc();
+            funcionarioEntities = funcionarioRepository.findAllByOrderByNomeAsc();
         }
-        return funcionarios.stream().map(this::mapearParaResposta).collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public List<String> listarObras() {
-        // 3. REVERTER a chamada para usar o método da @Query
-        return funcionarioRepositorio.listarObrasOrdenadas();
+        return funcionarioEntities.stream().map(this::mapearParaResposta).collect(Collectors.toList());
     }
 
     @Transactional
     public void remover(Long id) {
         log.info("Tentando remover funcionário ID: {}", id);
-        if (!funcionarioRepositorio.existsById(id)) {
+        if (!funcionarioRepository.existsById(id)) {
             log.warn("Funcionário ID: {} não encontrado para remoção.", id);
             throw new RecursoNaoEncontradoException("Funcionário não encontrado.");
         }
-        funcionarioRepositorio.deleteById(id);
+        // NOTA: Adicionar verificação se funcionário possui envios antes de excluir
+        funcionarioRepository.deleteById(id);
         log.info("Funcionário ID: {} removido com sucesso. (LGPD: Remoção de Dados Pessoais)", id);
     }
 
-    private FuncionarioResposta mapearParaResposta(Funcionario funcionario) {
-        return new FuncionarioResposta(funcionario.getId(), funcionario.getNome(), funcionario.getCelular(), funcionario.getObra());
+    private FuncionarioResponse mapearParaResposta(FuncionarioEntity funcionarioEntity) {
+        return new FuncionarioResponse(funcionarioEntity);
     }
 
     private String sanitizarTexto(String texto) {

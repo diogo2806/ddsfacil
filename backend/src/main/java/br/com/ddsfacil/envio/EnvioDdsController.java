@@ -1,8 +1,8 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/envio/EnvioDdsControlador.java
+// Arquivo: backend/src/main/java/br/com/ddsfacil/envio/EnvioDdsController.java
 package br.com.ddsfacil.envio;
 
-import br.com.ddsfacil.envio.dto.EnvioDdsRequisicao;
-import br.com.ddsfacil.envio.dto.EnvioDdsResposta;
+import br.com.ddsfacil.envio.dto.EnvioDdsRequest;
+import br.com.ddsfacil.envio.dto.EnvioDdsResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -27,17 +27,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/envios")
 @CrossOrigin(origins = "http://localhost:5173")
 @Tag(name = "Envios DDS", description = "Gerenciamento e dashboard de envios de DDS")
-public class EnvioDdsControlador {
+public class EnvioDdsController {
 
-    private final EnvioDdsServico envioServico;
+    private final EnvioDdsService envioServico;
 
-    public EnvioDdsControlador(EnvioDdsServico envioServico) {
+    public EnvioDdsController(EnvioDdsService envioServico) {
         this.envioServico = envioServico;
     }
 
     @GetMapping
     @Operation(summary = "Lista os envios de DDS por data (padrão: data atual)")
-    public List<EnvioDdsResposta> listarPorData(
+    public List<EnvioDdsResponse> listarPorData(
             @RequestParam(name = "data", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate data
@@ -48,13 +48,13 @@ public class EnvioDdsControlador {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Envia um DDS para uma lista de funcionários")
-    public List<EnvioDdsResposta> enviar(@Valid @RequestBody EnvioDdsRequisicao requisicao) {
+    public List<EnvioDdsResponse> enviar(@Valid @RequestBody EnvioDdsRequest requisicao) {
         return envioServico.enviar(requisicao);
     }
 
     @PostMapping("/{id}/confirmacoes")
     @Operation(summary = "Força a confirmação de um envio (simulação manual)")
-    public EnvioDdsResposta confirmar(@PathVariable Long id) {
+    public EnvioDdsResponse confirmar(@PathVariable Long id) {
         return envioServico.confirmar(id);
     }
 

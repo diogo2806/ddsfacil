@@ -1,17 +1,24 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/funcionario/FuncionarioRepositorio.java
+// Arquivo: backend/src/main/java/br/com/ddsfacil/funcionario/FuncionarioRepository.java
 package br.com.ddsfacil.funcionario;
 
 import java.util.List;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query; // 1. Adicionar este import
+// import org.springframework.data.jpa.repository.Query; // [REMOVIDO]
 
-public interface FuncionarioRepositorio extends JpaRepository<Funcionario, Long> {
+public interface FuncionarioRepository extends JpaRepository<FuncionarioEntity, Long> {
 
-    List<Funcionario> findByObraIgnoreCaseOrderByNomeAsc(String obra);
+    /**
+     * [REATORADO] Substituída @Query por método derivado com @EntityGraph.
+     * (Regra 2.5 - Sem @Query)
+     */
+    @EntityGraph(value = "Funcionario.withLocalTrabalhoAndTipo")
+    List<FuncionarioEntity> findAllByLocalTrabalhoIdOrderByNomeAsc(Long localTrabalhoId);
 
-    List<Funcionario> findAllByOrderByNomeAsc();
-
-    // 2. REVERTER este método para a @Query original
-    @Query("select distinct f.obra from Funcionario f order by f.obra asc")
-    List<String> listarObrasOrdenadas();
+    /**
+     * [REATORADO] Substituída @Query por método derivado com @EntityGraph.
+     * (Regra 2.5 - Sem @Query)
+     */
+    @EntityGraph(value = "Funcionario.withLocalTrabalhoAndTipo")
+    List<FuncionarioEntity> findAllByOrderByNomeAsc();
 }

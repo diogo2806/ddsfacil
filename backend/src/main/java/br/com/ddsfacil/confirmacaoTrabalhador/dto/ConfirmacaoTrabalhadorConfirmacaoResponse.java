@@ -3,12 +3,12 @@ package br.com.ddsfacil.confirmacaoTrabalhador.dto;
 import br.com.ddsfacil.envio.StatusEnvioDds;
 import java.time.LocalDateTime;
 
-public class ConfirmacaoTrabalhadorConfirmacaoResposta {
+public class ConfirmacaoTrabalhadorConfirmacaoResponse {
 
     private final StatusEnvioDds status;
     private final LocalDateTime momentoConfirmacao;
 
-    public ConfirmacaoTrabalhadorConfirmacaoResposta(StatusEnvioDds status, LocalDateTime momentoConfirmacao) {
+    public ConfirmacaoTrabalhadorConfirmacaoResponse(StatusEnvioDds status, LocalDateTime momentoConfirmacao) {
         this.status = status;
         this.momentoConfirmacao = momentoConfirmacao;
     }

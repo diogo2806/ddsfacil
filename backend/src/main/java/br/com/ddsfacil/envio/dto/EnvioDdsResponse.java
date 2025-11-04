@@ -1,13 +1,15 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/envio/dto/EnvioDdsResposta.java
+// Arquivo: backend/src/main/java/br/com/ddsfacil/envio/dto/EnvioDdsResponse.java
 package br.com.ddsfacil.envio.dto;
 
 import br.com.ddsfacil.envio.StatusEnvioDds;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import lombok.Getter;
 
 @Schema(description = "DTO de resposta para um envio de DDS registrado")
-public class EnvioDdsResposta {
+@Getter
+public class EnvioDdsResponse {
 
     @Schema(description = "ID único do envio", example = "1")
     private final Long id;
@@ -39,7 +41,7 @@ public class EnvioDdsResposta {
     @Schema(description = "Momento da confirmação (se houver)")
     private final LocalDateTime momentoConfirmacao;
 
-    public EnvioDdsResposta(
+    public EnvioDdsResponse(
             Long id,
             Long funcionarioId,
             String nomeFuncionario,
@@ -61,45 +63,5 @@ public class EnvioDdsResposta {
         this.dataEnvio = dataEnvio;
         this.momentoEnvio = momentoEnvio;
         this.momentoConfirmacao = momentoConfirmacao;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public Long getFuncionarioId() {
-        return funcionarioId;
-    }
-
-    public String getNomeFuncionario() {
-        return nomeFuncionario;
-    }
-
-    public String getObra() {
-        return obra;
-    }
-
-    public Long getConteudoId() {
-        return conteudoId;
-    }
-
-    public String getTituloConteudo() {
-        return tituloConteudo;
-    }
-
-    public StatusEnvioDds getStatus() {
-        return status;
-    }
-
-    public LocalDate getDataEnvio() {
-        return dataEnvio;
-    }
-
-    public LocalDateTime getMomentoEnvio() {
-        return momentoEnvio;
-    }
-
-    public LocalDateTime getMomentoConfirmacao() {
-        return momentoConfirmacao;
     }
 }

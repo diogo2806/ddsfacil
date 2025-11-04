@@ -1,8 +1,8 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/envio/EnvioDds.java
+// Arquivo: backend/src/main/java/br/com/ddsfacil/envio/EnvioDdsEntity.java
 package br.com.ddsfacil.envio;
 
-import br.com.ddsfacil.conteudo.ConteudoDds;
-import br.com.ddsfacil.funcionario.Funcionario;
+import br.com.ddsfacil.conteudo.ConteudoDdsEntity;
+import br.com.ddsfacil.funcionario.FuncionarioEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -28,7 +28,7 @@ import lombok.ToString;
 @Table(name = "envios_dds")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class EnvioDds {
+public class EnvioDdsEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,13 +38,13 @@ public class EnvioDds {
     @JoinColumn(name = "funcionario_id")
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
-    private Funcionario funcionario;
+    private FuncionarioEntity funcionarioEntity;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "conteudo_id")
     @EqualsAndHashCode.Exclude
     @ToString.Exclude
-    private ConteudoDds conteudo;
+    private ConteudoDdsEntity conteudo;
 
     @Column(name = "data_envio", nullable = false)
     private LocalDate dataEnvio;
@@ -56,14 +56,14 @@ public class EnvioDds {
     private LocalDateTime momentoConfirmacao;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(name = "status", nullable = false, length = 20)
     private StatusEnvioDds status;
 
     @Column(name = "token_acesso", nullable = false, unique = true, length = 64)
     private String tokenAcesso;
 
-    public EnvioDds(Funcionario funcionario, ConteudoDds conteudo, LocalDate dataEnvio, LocalDateTime momentoEnvio) {
-        this.funcionario = funcionario;
+    public EnvioDdsEntity(FuncionarioEntity funcionarioEntity, ConteudoDdsEntity conteudo, LocalDate dataEnvio, LocalDateTime momentoEnvio) {
+        this.funcionarioEntity = funcionarioEntity;
         this.conteudo = conteudo;
         this.dataEnvio = dataEnvio;
         this.momentoEnvio = momentoEnvio;
