@@ -10,21 +10,7 @@ import { useLocalAdmin } from '../../hooks/useLocalAdmin';
 import type { TipoLocalAdmin, LocalTrabalho } from '../../servicos/localTrabalhoServico';
 import TelaDivulgacao from './TelaDivulgacao';
 
-function sanitizarTexto(texto: string): string {
-  return texto.replace(/[<>&"'`]/g, '').replace(/\s+/g, ' ').trim();
-}
-
-function sanitizarTextoMultilinha(texto: string): string {
-  return texto
-    .split('\n')
-    .map((linha) => sanitizarTexto(linha))
-    .join('\n')
-    .trim();
-}
-
-function sanitizarCelular(texto: string): string {
-  return texto.replace(/[^0-9()+\-\s]/g, '').trim();
-}
+import { sanitizarTexto, sanitizarTextoMultilinha, sanitizarCelular } from '../../utils/validador';
 
 type AbaPainel = 'dashboard' | 'enviar' | 'funcionarios' | 'conteudo';
 
@@ -61,6 +47,13 @@ export default function App() {
   const [novoTipoLocal, definirNovoTipoLocal] = useState('');
   const [novoLocalNome, definirNovoLocalNome] = useState('');
   const [novoLocalTipoId, definirNovoLocalTipoId] = useState<number | ''>('');
+  // estado para aba da administração (tipos | locais) e estados de edição
+  const [abaAdmin, definirAbaAdmin] = useState<'tipos' | 'locais'>('tipos');
+  const [editandoTipoId, definirEditandoTipoId] = useState<number | null>(null);
+  const [editandoTipoNome, definirEditandoTipoNome] = useState<string>('');
+  const [editandoLocalId, definirEditandoLocalId] = useState<number | null>(null);
+  const [editandoLocalNome, definirEditandoLocalNome] = useState<string>('');
+  const [editandoLocalTipoId, definirEditandoLocalTipoId] = useState<number | ''>('');
   const [notificacao, definirNotificacao] = useState<Notificacao | null>(null);
   const referenciaNotificacao = useRef<number>();
 
@@ -94,6 +87,8 @@ export default function App() {
     mutacaoRemoverTipo,
     mutacaoCriarLocal,
     mutacaoRemoverLocal,
+    mutacaoAtualizarTipo,
+    mutacaoAtualizarLocal,
   } = useLocalAdmin();
 
   // mutações de funcionários e envios são providas pelos hooks (useFuncionarios e useEnvios)
@@ -280,6 +275,23 @@ export default function App() {
             <BotaoAba ativo={abaAtiva === 'conteudo'} onClick={() => definirAbaAtiva('conteudo')}>
               Conteúdo DDS
             </BotaoAba>
+            {/* Admin quick-tabs (Tipos / Locais) shown in the main header as requested */}
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => definirAbaAdmin('tipos')}
+                className={`px-3 py-1 rounded ${abaAdmin === 'tipos' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}
+              >
+                Tipos de Local
+              </button>
+              <button
+                type="button"
+                onClick={() => definirAbaAdmin('locais')}
+                className={`px-3 py-1 rounded ${abaAdmin === 'locais' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}
+              >
+                Locais
+              </button>
+            </div>
           </div>
         </div>
       </header>
@@ -525,129 +537,201 @@ export default function App() {
                   <p className="text-sm text-gray-500 mb-4">Cadastre tipos de local e locais de trabalho usados no sistema.</p>
 
                   <div className="space-y-4">
-                    <form
-                      onSubmit={async (e) => {
-                        e.preventDefault();
-                        const nome = novoTipoLocal.trim();
-                        if (!nome) {
-                          exibirNotificacao({ tipo: 'erro', mensagem: 'Informe o nome do tipo.' });
-                          return;
-                        }
-                        try {
-                          await mutacaoCriarTipo.mutateAsync(nome);
-                          definirNovoTipoLocal('');
-                          exibirNotificacao({ tipo: 'sucesso', mensagem: 'Tipo de local criado.' });
-                        } catch {
-                          exibirNotificacao({ tipo: 'erro', mensagem: 'Não foi possível criar o tipo.' });
-                        }
-                      }}
-                      className="flex gap-2"
-                    >
-                      <input
-                        className="flex-1 rounded-lg border border-gray-300 px-3 py-2"
-                        placeholder="Novo tipo (ex: Obra, Escritório)"
-                        value={novoTipoLocal}
-                        onChange={(ev) => definirNovoTipoLocal(ev.target.value)}
-                      />
+                    <div className="flex gap-2 mb-3">
                       <button
-                        type="submit"
-                        className="rounded-lg bg-green-600 px-4 py-2 text-white"
-                        disabled={mutacaoCriarTipo.isPending}
-                      >
-                        {mutacaoCriarTipo.isPending ? 'Salvando...' : 'Criar Tipo'}
+                        type="button"
+                        onClick={() => definirAbaAdmin('tipos')}
+                        className={`px-3 py-1 rounded ${abaAdmin === 'tipos' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}>
+                        Tipos de Local
                       </button>
-                    </form>
-
-                    <div>
-                      <h5 className="text-sm font-medium text-gray-700">Tipos cadastrados</h5>
-                      <div className="mt-2 space-y-2">
-                        {consultaTipos.isLoading && <p className="text-gray-500">Carregando tipos...</p>}
-                        {consultaTipos.isError && <p className="text-red-600">Não foi possível carregar os tipos.</p>}
-                          {consultaTipos.data?.map((tipo: TipoLocalAdmin) => (
-                          <div key={tipo.id} className="flex items-center justify-between rounded bg-gray-50 px-3 py-2">
-                            <span>{tipo.nome}</span>
-                            <button
-                              className="text-red-600 text-sm"
-                              onClick={() => {
-                                if (!confirm('Remover este tipo?')) return;
-                                mutacaoRemoverTipo.mutate(tipo.id);
-                              }}
-                              disabled={mutacaoRemoverTipo.isPending}
-                            >
-                              {mutacaoRemoverTipo.isPending ? 'Removendo...' : 'Remover'}
-                            </button>
-                          </div>
-                        ))}
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => definirAbaAdmin('locais')}
+                        className={`px-3 py-1 rounded ${abaAdmin === 'locais' ? 'bg-blue-600 text-white' : 'bg-gray-100'}`}>
+                        Locais
+                      </button>
                     </div>
 
-                    <form
-                      onSubmit={async (e) => {
-                        e.preventDefault();
-                        const nome = novoLocalNome.trim();
-                        const tipoId = Number(novoLocalTipoId);
-                        if (!nome || !tipoId) {
-                          exibirNotificacao({ tipo: 'erro', mensagem: 'Preencha nome e tipo do local.' });
-                          return;
-                        }
-                        try {
-                          await mutacaoCriarLocal.mutateAsync({ nome, tipoLocalId: tipoId });
-                          definirNovoLocalNome('');
-                          definirNovoLocalTipoId('');
-                          exibirNotificacao({ tipo: 'sucesso', mensagem: 'Local criado.' });
-                        } catch {
-                          exibirNotificacao({ tipo: 'erro', mensagem: 'Não foi possível criar o local.' });
-                        }
-                      }}
-                      className="space-y-2"
-                    >
-                      <div className="flex gap-2">
-                        <input
-                          className="flex-1 rounded-lg border border-gray-300 px-3 py-2"
-                          placeholder="Nome do local"
-                          value={novoLocalNome}
-                          onChange={(ev) => definirNovoLocalNome(ev.target.value)}
-                        />
-                        <select
-                          value={novoLocalTipoId}
-                          onChange={(ev) => definirNovoLocalTipoId(ev.target.value ? Number(ev.target.value) : '')}
-                          className="rounded-lg border border-gray-300 px-3 py-2"
+                    {abaAdmin === 'tipos' ? (
+                      <div>
+                        <form
+                          onSubmit={async (e) => {
+                            e.preventDefault();
+                            const nome = (editandoTipoId ? editandoTipoNome : novoTipoLocal).trim();
+                            if (!nome) {
+                              exibirNotificacao({ tipo: 'erro', mensagem: 'Informe o nome do tipo.' });
+                              return;
+                            }
+                            try {
+                              if (editandoTipoId) {
+                                await mutacaoAtualizarTipo.mutateAsync({ id: editandoTipoId, nome });
+                                definirEditandoTipoId(null);
+                                definirEditandoTipoNome('');
+                                exibirNotificacao({ tipo: 'sucesso', mensagem: 'Tipo atualizado.' });
+                              } else {
+                                await mutacaoCriarTipo.mutateAsync(nome);
+                                definirNovoTipoLocal('');
+                                exibirNotificacao({ tipo: 'sucesso', mensagem: 'Tipo de local criado.' });
+                              }
+                            } catch {
+                              exibirNotificacao({ tipo: 'erro', mensagem: 'Não foi possível salvar o tipo.' });
+                            }
+                          }}
+                          className="flex gap-2"
                         >
-                          <option value="">Tipo</option>
-                          {consultaTipos.data?.map((t: TipoLocalAdmin) => (
-                            <option key={t.id} value={t.id}>{t.nome}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="flex gap-2">
-                        <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-white" disabled={mutacaoCriarLocal.isPending}>
-                          {mutacaoCriarLocal.isPending ? 'Salvando...' : 'Criar Local'}
-                        </button>
-                      </div>
-                    </form>
-
-                    <div>
-                      <h5 className="text-sm font-medium text-gray-700">Locais cadastrados</h5>
-                      <div className="mt-2 space-y-2">
-                        {consultaLocaisAdmin.isLoading && <p className="text-gray-500">Carregando locais...</p>}
-                        {consultaLocaisAdmin.isError && <p className="text-red-600">Não foi possível carregar os locais.</p>}
-                        {consultaLocaisAdmin.data?.map((local: LocalTrabalho) => (
-                          <div key={local.id} className="flex items-center justify-between rounded bg-gray-50 px-3 py-2">
-                            <span>{local.nome} ({local.tipoLocalNome})</span>
+                          <input
+                            className="flex-1 rounded-lg border border-gray-300 px-3 py-2"
+                            placeholder="Novo tipo (ex: Obra, Escritório)"
+                            value={editandoTipoId ? editandoTipoNome : novoTipoLocal}
+                            onChange={(ev) => editandoTipoId ? definirEditandoTipoNome(ev.target.value) : definirNovoTipoLocal(ev.target.value)}
+                          />
+                          <div className="flex gap-2">
+                            {editandoTipoId && (
+                              <button
+                                type="button"
+                                className="rounded-lg bg-gray-300 px-4 py-2"
+                                onClick={() => { definirEditandoTipoId(null); definirEditandoTipoNome(''); }}
+                              >
+                                Cancelar
+                              </button>
+                            )}
                             <button
-                              className="text-red-600 text-sm"
-                              onClick={() => {
-                                if (!confirm('Remover este local?')) return;
-                                mutacaoRemoverLocal.mutate(local.id);
-                              }}
-                              disabled={mutacaoRemoverLocal.isPending}
+                              type="submit"
+                              className="rounded-lg bg-green-600 px-4 py-2 text-white"
+                              disabled={mutacaoCriarTipo.isPending || mutacaoAtualizarTipo?.isPending}
                             >
-                              {mutacaoRemoverLocal.isPending ? 'Removendo...' : 'Remover'}
+                              {(editandoTipoId ? mutacaoAtualizarTipo?.isPending : mutacaoCriarTipo.isPending) ? 'Salvando...' : (editandoTipoId ? 'Salvar' : 'Criar Tipo')}
                             </button>
                           </div>
-                        ))}
+                        </form>
+
+                        <div className="mt-4">
+                          <h5 className="text-sm font-medium text-gray-700">Tipos cadastrados</h5>
+                          <div className="mt-2 space-y-2">
+                            {consultaTipos.isLoading && <p className="text-gray-500">Carregando tipos...</p>}
+                            {consultaTipos.isError && <p className="text-red-600">Não foi possível carregar os tipos.</p>}
+                            {consultaTipos.data?.map((tipo: TipoLocalAdmin) => (
+                              <div key={tipo.id} className="flex items-center justify-between rounded bg-gray-50 px-3 py-2">
+                                <span>{tipo.nome}</span>
+                                <div className="flex gap-2">
+                                  <button
+                                    className="text-sm px-2 py-1 bg-yellow-100 rounded"
+                                    onClick={() => { definirEditandoTipoId(tipo.id); definirEditandoTipoNome(tipo.nome); }}
+                                  >
+                                    Editar
+                                  </button>
+                                  <button
+                                    className="text-red-600 text-sm"
+                                    onClick={() => {
+                                      if (!confirm('Remover este tipo?')) return;
+                                      mutacaoRemoverTipo.mutate(tipo.id);
+                                    }}
+                                    disabled={mutacaoRemoverTipo.isPending}
+                                  >
+                                    {mutacaoRemoverTipo.isPending ? 'Removendo...' : 'Remover'}
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    ) : (
+                      <div>
+                        <form
+                          onSubmit={async (e) => {
+                            e.preventDefault();
+                            const nome = (editandoLocalId ? editandoLocalNome : novoLocalNome).trim();
+                            const tipoId = Number(editandoLocalId ? editandoLocalTipoId : novoLocalTipoId);
+                            if (!nome || !tipoId) {
+                              exibirNotificacao({ tipo: 'erro', mensagem: 'Preencha nome e tipo do local.' });
+                              return;
+                            }
+                            try {
+                              if (editandoLocalId) {
+                                await mutacaoAtualizarLocal.mutateAsync({ id: editandoLocalId, dados: { nome, tipoLocalId: tipoId } });
+                                definirEditandoLocalId(null);
+                                definirEditandoLocalNome('');
+                                definirEditandoLocalTipoId('');
+                                exibirNotificacao({ tipo: 'sucesso', mensagem: 'Local atualizado.' });
+                              } else {
+                                await mutacaoCriarLocal.mutateAsync({ nome, tipoLocalId: tipoId });
+                                definirNovoLocalNome('');
+                                definirNovoLocalTipoId('');
+                                exibirNotificacao({ tipo: 'sucesso', mensagem: 'Local criado.' });
+                              }
+                            } catch {
+                              exibirNotificacao({ tipo: 'erro', mensagem: 'Não foi possível salvar o local.' });
+                            }
+                          }}
+                          className="space-y-2"
+                        >
+                          <div className="flex gap-2">
+                            <input
+                              className="flex-1 rounded-lg border border-gray-300 px-3 py-2"
+                              placeholder="Nome do local"
+                              value={editandoLocalId ? editandoLocalNome : novoLocalNome}
+                              onChange={(ev) => editandoLocalId ? definirEditandoLocalNome(ev.target.value) : definirNovoLocalNome(ev.target.value)}
+                            />
+                            <select
+                              value={editandoLocalId ? editandoLocalTipoId : novoLocalTipoId}
+                              onChange={(ev) => (editandoLocalId ? definirEditandoLocalTipoId(ev.target.value ? Number(ev.target.value) : '') : definirNovoLocalTipoId(ev.target.value ? Number(ev.target.value) : ''))}
+                              className="rounded-lg border border-gray-300 px-3 py-2"
+                            >
+                              <option value="">Tipo</option>
+                              {consultaTipos.data?.map((t: TipoLocalAdmin) => (
+                                <option key={t.id} value={t.id}>{t.nome}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="flex gap-2">
+                            {editandoLocalId && (
+                              <button
+                                type="button"
+                                className="rounded-lg bg-gray-300 px-4 py-2"
+                                onClick={() => { definirEditandoLocalId(null); definirEditandoLocalNome(''); definirEditandoLocalTipoId(''); }}
+                              >
+                                Cancelar
+                              </button>
+                            )}
+                            <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-white" disabled={mutacaoCriarLocal.isPending || mutacaoAtualizarLocal?.isPending}>
+                              {(editandoLocalId ? mutacaoAtualizarLocal?.isPending : mutacaoCriarLocal.isPending) ? 'Salvando...' : (editandoLocalId ? 'Salvar' : 'Criar Local')}
+                            </button>
+                          </div>
+                        </form>
+
+                        <div className="mt-4">
+                          <h5 className="text-sm font-medium text-gray-700">Locais cadastrados</h5>
+                          <div className="mt-2 space-y-2">
+                            {consultaLocaisAdmin.isLoading && <p className="text-gray-500">Carregando locais...</p>}
+                            {consultaLocaisAdmin.isError && <p className="text-red-600">Não foi possível carregar os locais.</p>}
+                            {consultaLocaisAdmin.data?.map((local: LocalTrabalho) => (
+                              <div key={local.id} className="flex items-center justify-between rounded bg-gray-50 px-3 py-2">
+                                <span>{local.nome} ({local.tipoLocalNome})</span>
+                                <div className="flex gap-2">
+                                  <button
+                                    className="text-sm px-2 py-1 bg-yellow-100 rounded"
+                                    onClick={() => { definirEditandoLocalId(local.id); definirEditandoLocalNome(local.nome); definirEditandoLocalTipoId(local.tipoLocalId); }}
+                                  >
+                                    Editar
+                                  </button>
+                                  <button
+                                    className="text-red-600 text-sm"
+                                    onClick={() => {
+                                      if (!confirm('Remover este local?')) return;
+                                      mutacaoRemoverLocal.mutate(local.id);
+                                    }}
+                                    disabled={mutacaoRemoverLocal.isPending}
+                                  >
+                                    {mutacaoRemoverLocal.isPending ? 'Removendo...' : 'Remover'}
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

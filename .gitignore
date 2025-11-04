@@ -1,3 +1,16 @@
+# Node / build
+node_modules/
+dist/
+build/
+
+# Uploads (local dev artifacts)
+uploads/
+backend/uploads/
+frontend/uploads/
+
+# IDE
+.idea/
+.vscode/
 backend/target/
 backend/dados/
 frontend/node_modules/
