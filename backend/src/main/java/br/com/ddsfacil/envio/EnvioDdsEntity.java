@@ -1,3 +1,4 @@
+// Arquivo: backend/src/main/java/br/com/ddsfacil/envio/EnvioDds.java
 package br.com.ddsfacil.envio;
 
 import br.com.ddsfacil.conteudo.ConteudoDds;
@@ -17,9 +18,16 @@ import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 @Entity
 @Table(name = "envios_dds")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class EnvioDds {
 
     @Id
@@ -28,10 +36,14 @@ public class EnvioDds {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "funcionario_id")
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private Funcionario funcionario;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "conteudo_id")
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
     private ConteudoDds conteudo;
 
     @Column(name = "data_envio", nullable = false)
@@ -50,8 +62,6 @@ public class EnvioDds {
     @Column(name = "token_acesso", nullable = false, unique = true, length = 64)
     private String tokenAcesso;
 
-    protected EnvioDds() {}
-
     public EnvioDds(Funcionario funcionario, ConteudoDds conteudo, LocalDate dataEnvio, LocalDateTime momentoEnvio) {
         this.funcionario = funcionario;
         this.conteudo = conteudo;
@@ -59,38 +69,6 @@ public class EnvioDds {
         this.momentoEnvio = momentoEnvio;
         this.status = StatusEnvioDds.ENVIADO;
         this.tokenAcesso = gerarToken();
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public Funcionario getFuncionario() {
-        return funcionario;
-    }
-
-    public ConteudoDds getConteudo() {
-        return conteudo;
-    }
-
-    public LocalDate getDataEnvio() {
-        return dataEnvio;
-    }
-
-    public LocalDateTime getMomentoEnvio() {
-        return momentoEnvio;
-    }
-
-    public LocalDateTime getMomentoConfirmacao() {
-        return momentoConfirmacao;
-    }
-
-    public StatusEnvioDds getStatus() {
-        return status;
-    }
-
-    public String getTokenAcesso() {
-        return tokenAcesso;
     }
 
     public void confirmar(LocalDateTime momento) {

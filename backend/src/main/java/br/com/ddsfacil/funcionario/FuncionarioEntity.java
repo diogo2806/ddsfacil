@@ -1,3 +1,4 @@
+// Arquivo: backend/src/main/java/br/com/ddsfacil/funcionario/Funcionario.java
 package br.com.ddsfacil.funcionario;
 
 import jakarta.persistence.Column;
@@ -6,58 +7,39 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "funcionarios")
+@Getter
+@Setter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class Funcionario {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 120)
+    // LGPD: Dado Pessoal
+    @Column(name = "nome", nullable = false, length = 120)
     private String nome;
 
-    @Column(nullable = false, length = 20)
+    // LGPD: Dado Pessoal
+    @Column(name = "celular", nullable = false, length = 20)
     private String celular;
 
-    @Column(nullable = false, length = 120)
+    @Column(name = "obra", nullable = false, length = 120)
     private String obra;
 
-    protected Funcionario() {
-    }
-
+    // Construtor mantido para compatibilidade com o AllArgsConstructor gerado
     public Funcionario(String nome, String celular, String obra) {
         this.nome = nome;
         this.celular = celular;
-        this.obra = obra;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
-
-    public String getCelular() {
-        return celular;
-    }
-
-    public void setCelular(String celular) {
-        this.celular = celular;
-    }
-
-    public String getObra() {
-        return obra;
-    }
-
-    public void setObra(String obra) {
         this.obra = obra;
     }
 }
