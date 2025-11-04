@@ -21,6 +21,7 @@
         <springdoc-openapi.version>2.5.0</springdoc-openapi.version>
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <lombok.version>1.18.32</lombok.version>
     </properties>
 
     <dependencies>
