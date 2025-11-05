@@ -1,15 +1,15 @@
+// Arquivo: frontend/src/servicos/confirmacaoTrabalhadorServico.ts
 import { clienteHttp } from './clienteHttp';
+import { StatusEnvio } from '../types/enums';
 
 export type DadosConfirmacaoTrabalhador = {
   titulo: string;
   descricao: string;
 };
-
 export type RespostaConfirmacao = {
-  status: 'ENVIADO' | 'CONFIRMADO';
+  status: StatusEnvio;
   momentoConfirmacao: string | null;
 };
-
 function sanitizarToken(token: string): string {
   return token.replace(/[^a-zA-Z0-9-]/g, '');
 }
