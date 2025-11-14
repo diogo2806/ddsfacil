@@ -8,16 +8,20 @@ export const clienteHttp = axios.create({
   },
 });
 
+function removerPrefixoBearer(tokenJwt: string): string {
+  return tokenJwt.replace(/^Bearer\s+/i, '').trim();
+}
+
 export function configurarCabecalhoAutorizacaoJwt(tokenJwt: string | null | undefined): void {
   if (typeof tokenJwt !== 'string') {
     delete clienteHttp.defaults.headers.common.Authorization;
     return;
   }
 
-  const tokenLimpo = tokenJwt.replace(/^Bearer\s+/i, '').trim();
+  const tokenSemPrefixo = removerPrefixoBearer(tokenJwt);
 
-  if (tokenLimpo) {
-    clienteHttp.defaults.headers.common.Authorization = tokenLimpo;
+  if (tokenSemPrefixo) {
+    clienteHttp.defaults.headers.common.Authorization = tokenSemPrefixo;
   } else {
     delete clienteHttp.defaults.headers.common.Authorization;
   }
