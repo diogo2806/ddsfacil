@@ -27,7 +27,7 @@ export default function App() {
   const navegador = useNavigate();
 
   const [telaAtual, definirTelaAtual] = useState<TelaApp>(() =>
-    localizacao.pathname === '/painel' ? TelaApp.PAINEL : TelaApp.DIVULGAÇÃO,
+    localizacao.pathname === '/painel' ? TelaApp.PAINEL : TelaApp.DIVULGACAO,
   );
   
   const [abaAtiva, definirAbaAtiva] = useState<AbaPainel>(AbaPainel.DASHBOARD);
@@ -41,7 +41,7 @@ export default function App() {
   // App.tsx agora é limpo.
 
   useEffect(() => {
-    definirTelaAtual(localizacao.pathname === '/painel' ? TelaApp.PAINEL : TelaApp.DIVULGAÇÃO);
+    definirTelaAtual(localizacao.pathname === '/painel' ? TelaApp.PAINEL : TelaApp.DIVULGACAO);
   }, [localizacao.pathname]);
 
   function tratarSolicitacaoLogin() {
