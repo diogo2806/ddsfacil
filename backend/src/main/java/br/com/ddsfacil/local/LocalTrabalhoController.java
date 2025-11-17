@@ -14,7 +14,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/locais-trabalho")
-@CrossOrigin(origins = "http://localhost:5173")
 @Tag(name = "Locais de Trabalho", description = "Gerenciamento dos locais de trabalho (Obras, Escritórios, etc.)")
 public class LocalTrabalhoController {
 
