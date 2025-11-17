@@ -1,11 +1,12 @@
 package br.com.ddsfacil.confirmacaoTrabalhador;
 
+import br.com.ddsfacil.conteudo.ConteudoDdsEntity;
 import br.com.ddsfacil.confirmacaoTrabalhador.dto.ConfirmacaoTrabalhadorConfirmacaoResponse;
 import br.com.ddsfacil.confirmacaoTrabalhador.dto.ConfirmacaoTrabalhadorResponse;
+import br.com.ddsfacil.conteudo.TipoConteudo;
 import br.com.ddsfacil.envio.EnvioDdsEntity;
 import br.com.ddsfacil.envio.EnvioDdsRepository;
 import br.com.ddsfacil.excecao.RecursoNaoEncontradoException;
-import br.com.ddsfacil.conteudo.TipoConteudo;
 import java.time.LocalDateTime;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
@@ -27,7 +28,7 @@ public class ConfirmacaoTrabalhadorService {
         String titulo = Jsoup.clean(envio.getConteudo().getTitulo(), Safelist.none()).strip();
         String descricao = Jsoup.clean(envio.getConteudo().getDescricao(), Safelist.none()).strip();
         TipoConteudo tipoConteudo = envio.getConteudo().getTipo();
-        String urlConteudo = limparCampoOpcional(envio.getConteudo().getUrl());
+        String urlConteudo = resolverUrlConteudo(envio.getConteudo());
         String nomeArquivo = limparCampoOpcional(envio.getConteudo().getArquivoNome());
 
         return new ConfirmacaoTrabalhadorResponse(titulo, descricao, tipoConteudo, urlConteudo, nomeArquivo);
@@ -48,6 +49,17 @@ public class ConfirmacaoTrabalhadorService {
         return envioRepositorio
             .findByTokenAcesso(tokenSanitizado)
             .orElseThrow(() -> new RecursoNaoEncontradoException("Envio não encontrado para o token informado."));
+    }
+
+    private String resolverUrlConteudo(ConteudoDdsEntity conteudo) {
+        String urlLimpa = limparCampoOpcional(conteudo.getUrl());
+        if (conteudo.getTipo() == TipoConteudo.ARQUIVO) {
+            String caminhoArquivoLimpo = limparCampoOpcional(conteudo.getArquivoPath());
+            if (caminhoArquivoLimpo != null) {
+                return caminhoArquivoLimpo;
+            }
+        }
+        return urlLimpa;
     }
 
     private String limparCampoOpcional(String valor) {
