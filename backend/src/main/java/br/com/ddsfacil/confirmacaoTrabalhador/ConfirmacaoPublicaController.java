@@ -6,6 +6,9 @@ import br.com.ddsfacil.confirmacaoTrabalhador.dto.ConfirmacaoTrabalhadorResponse
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDateTime;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,5 +39,18 @@ public class ConfirmacaoPublicaController {
     @Operation(summary = "Confirma a leitura de um DDS por token de acesso")
     public ConfirmacaoTrabalhadorConfirmacaoResponse confirmar(@PathVariable String tokenAcesso) {
         return confirmacaoServico.confirmarPorToken(tokenAcesso, LocalDateTime.now());
+    }
+
+    @GetMapping("/{tokenAcesso}/arquivo")
+    @Operation(summary = "Realiza o download seguro do arquivo associado ao DDS")
+    public ResponseEntity<ByteArrayResource> baixarArquivo(@PathVariable String tokenAcesso) {
+        var arquivo = confirmacaoServico.buscarArquivoPorToken(tokenAcesso);
+        ByteArrayResource recurso = new ByteArrayResource(arquivo.getDados());
+
+        return ResponseEntity
+            .ok()
+            .contentType(arquivo.getTipoMidia())
+            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + arquivo.getNomeArquivo() + "\"")
+            .body(recurso);
     }
 }
