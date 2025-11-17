@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import DOMPurify from 'dompurify';
@@ -12,6 +12,7 @@ import { TipoConteudo } from '../../types/enums';
 export default function PaginaConfirmacaoTrabalhador() {
   const parametros = useParams<{ token: string }>();
   const tokenAcesso = (parametros.token ?? '').trim();
+  const [visualizacaoFalhou, definirVisualizacaoFalhou] = useState(false);
 
   const consultaConteudo = useQuery<DadosConfirmacaoTrabalhador>({
     queryKey: ['confirmacao-dds', tokenAcesso],
@@ -27,6 +28,37 @@ export default function PaginaConfirmacaoTrabalhador() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
+
+  const tipoConteudo = consultaConteudo.data?.tipoConteudo;
+  const urlSegura = sanitizarUrl(consultaConteudo.data?.urlConteudo ?? null);
+  const tipoArquivo = identificarTipoArquivo(urlSegura);
+
+  useEffect(() => {
+    definirVisualizacaoFalhou(false);
+  }, [urlSegura, tipoArquivo]);
+
+  useEffect(() => {
+    if (!urlSegura || tipoConteudo !== TipoConteudo.ARQUIVO) {
+      return;
+    }
+    let cancelado = false;
+    const validarDisponibilidade = async () => {
+      try {
+        const resposta = await fetch(urlSegura, { method: 'HEAD' });
+        if (!resposta.ok && !cancelado) {
+          definirVisualizacaoFalhou(true);
+        }
+      } catch {
+        if (!cancelado) {
+          definirVisualizacaoFalhou(true);
+        }
+      }
+    };
+    void validarDisponibilidade();
+    return () => {
+      cancelado = true;
+    };
+  }, [tipoConteudo, urlSegura]);
 
   if (!tokenAcesso) {
     return (
@@ -55,10 +87,9 @@ export default function PaginaConfirmacaoTrabalhador() {
     );
   }
 
-  const { titulo, descricao, tipoConteudo, urlConteudo, nomeArquivo } = consultaConteudo.data;
+  const { titulo, descricao, nomeArquivo } = consultaConteudo.data;
   const tituloSeguro = sanitizarTexto(titulo);
   const descricaoSegura = sanitizarTexto(descricao);
-  const urlSegura = sanitizarUrl(urlConteudo);
   const nomeArquivoSeguro = sanitizarNomeArquivo(nomeArquivo);
   const confirmacaoConcluida = mutacaoConfirmacao.isSuccess;
 
@@ -89,7 +120,9 @@ export default function PaginaConfirmacaoTrabalhador() {
         )}
         {tipoConteudo === TipoConteudo.ARQUIVO && urlSegura && (
           <div className="mt-4 space-y-3 rounded-lg bg-blue-50 p-4 text-base text-gray-700">
-            <p className="font-medium">Faça o download do arquivo do DDS para leitura.</p>
+            <p className="font-medium">
+              Visualize o conteúdo do DDS abaixo ou realize o download para ler quando preferir.
+            </p>
             <a
               href={urlSegura}
               target="_blank"
@@ -99,12 +132,17 @@ export default function PaginaConfirmacaoTrabalhador() {
             >
               {nomeArquivoSeguro ? `Baixar ${nomeArquivoSeguro}` : 'Baixar arquivo'}
             </a>
-            {urlSegura.toLowerCase().endsWith('.pdf') && (
-              <iframe
-                src={urlSegura}
-                title="Pré-visualização do arquivo"
-                className="h-96 w-full rounded-md border border-blue-200"
-              />
+            {visualizacaoFalhou ? (
+              <p className="rounded-md border border-red-200 bg-white px-4 py-3 text-sm text-red-700">
+                Não foi possível carregar a pré-visualização. Faça o download para acessar o conteúdo.
+              </p>
+            ) : (
+              renderizarVisualizacaoArquivo(
+                urlSegura,
+                tipoArquivo,
+                nomeArquivoSeguro,
+                () => definirVisualizacaoFalhou(true),
+              )
             )}
           </div>
         )}
@@ -184,4 +222,82 @@ function sanitizarNomeArquivo(valor: string | null): string | null {
     .replace(/[^\w.\- ]/g, '')
     .trim();
   return textoLimpo.length > 0 ? textoLimpo : null;
+}
+
+type TipoArquivo = 'pdf' | 'imagem' | 'audio' | 'video' | 'desconhecido';
+
+function identificarTipoArquivo(url: string | null): TipoArquivo {
+  if (!url) {
+    return 'desconhecido';
+  }
+  const caminhoLimpo = url.split('?')[0].toLowerCase();
+  if (caminhoLimpo.endsWith('.pdf')) return 'pdf';
+  if (/(\.jpg|\.jpeg|\.png|\.gif|\.webp)$/.test(caminhoLimpo)) return 'imagem';
+  if (/(\.mp3|\.wav|\.ogg|\.m4a|\.aac)$/.test(caminhoLimpo)) return 'audio';
+  if (/(\.mp4|\.webm|\.ogv|\.mov)$/i.test(caminhoLimpo)) return 'video';
+  return 'desconhecido';
+}
+
+function renderizarVisualizacaoArquivo(
+  urlSegura: string,
+  tipoArquivo: TipoArquivo,
+  nomeArquivoSeguro: string | null,
+  aoFalhar?: () => void,
+) {
+  if (tipoArquivo === 'pdf') {
+    return (
+      <iframe
+        src={urlSegura}
+        title="Pré-visualização do PDF"
+        className="h-96 w-full rounded-md border border-blue-200 bg-white"
+        onError={aoFalhar}
+      />
+    );
+  }
+
+  if (tipoArquivo === 'imagem') {
+    return (
+      <img
+        src={urlSegura}
+        alt={nomeArquivoSeguro ?? 'Pré-visualização do arquivo'}
+        className="max-h-[26rem] w-full rounded-md border border-blue-200 object-contain bg-white"
+        loading="lazy"
+        onError={aoFalhar}
+      />
+    );
+  }
+
+  if (tipoArquivo === 'audio') {
+    return (
+      <audio
+        controls
+        className="w-full rounded-md border border-blue-200 bg-white"
+        src={urlSegura}
+        controlsList="nodownload"
+        onError={aoFalhar}
+      >
+        Seu navegador não suporta a reprodução de áudio.
+      </audio>
+    );
+  }
+
+  if (tipoArquivo === 'video') {
+    return (
+      <video
+        controls
+        className="w-full rounded-md border border-blue-200 bg-black"
+        src={urlSegura}
+        controlsList="nodownload"
+        onError={aoFalhar}
+      >
+        Seu navegador não suporta a reprodução de vídeo.
+      </video>
+    );
+  }
+
+  return (
+    <p className="text-sm text-gray-700">
+      Pré-visualização indisponível para este formato. Realize o download para acessar o conteúdo.
+    </p>
+  );
 }
