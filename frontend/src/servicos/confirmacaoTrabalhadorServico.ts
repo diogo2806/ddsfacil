@@ -1,10 +1,13 @@
 // Arquivo: frontend/src/servicos/confirmacaoTrabalhadorServico.ts
 import { clienteHttp } from './clienteHttp';
-import { StatusEnvio } from '../types/enums';
+import { StatusEnvio, TipoConteudo } from '../types/enums';
 
 export type DadosConfirmacaoTrabalhador = {
   titulo: string;
   descricao: string;
+  tipoConteudo: TipoConteudo;
+  urlConteudo: string | null;
+  nomeArquivo: string | null;
 };
 export type RespostaConfirmacao = {
   status: StatusEnvio;
