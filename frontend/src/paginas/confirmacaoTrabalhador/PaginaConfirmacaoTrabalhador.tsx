@@ -61,6 +61,7 @@ export default function PaginaConfirmacaoTrabalhador() {
   const urlSegura = sanitizarUrl(urlConteudo);
   const nomeArquivoSeguro = sanitizarNomeArquivo(nomeArquivo);
   const confirmacaoConcluida = mutacaoConfirmacao.isSuccess;
+  const tipoArquivo = identificarTipoArquivo(urlSegura);
 
   return (
     <LayoutPagina>
@@ -89,7 +90,9 @@ export default function PaginaConfirmacaoTrabalhador() {
         )}
         {tipoConteudo === TipoConteudo.ARQUIVO && urlSegura && (
           <div className="mt-4 space-y-3 rounded-lg bg-blue-50 p-4 text-base text-gray-700">
-            <p className="font-medium">Faça o download do arquivo do DDS para leitura.</p>
+            <p className="font-medium">
+              Visualize o conteúdo do DDS abaixo ou realize o download para ler quando preferir.
+            </p>
             <a
               href={urlSegura}
               target="_blank"
@@ -99,13 +102,7 @@ export default function PaginaConfirmacaoTrabalhador() {
             >
               {nomeArquivoSeguro ? `Baixar ${nomeArquivoSeguro}` : 'Baixar arquivo'}
             </a>
-            {urlSegura.toLowerCase().endsWith('.pdf') && (
-              <iframe
-                src={urlSegura}
-                title="Pré-visualização do arquivo"
-                className="h-96 w-full rounded-md border border-blue-200"
-              />
-            )}
+            {renderizarVisualizacaoArquivo(urlSegura, tipoArquivo, nomeArquivoSeguro)}
           </div>
         )}
         {!urlSegura && tipoConteudo !== TipoConteudo.TEXTO && (
@@ -184,4 +181,77 @@ function sanitizarNomeArquivo(valor: string | null): string | null {
     .replace(/[^\w.\- ]/g, '')
     .trim();
   return textoLimpo.length > 0 ? textoLimpo : null;
+}
+
+type TipoArquivo = 'pdf' | 'imagem' | 'audio' | 'video' | 'desconhecido';
+
+function identificarTipoArquivo(url: string | null): TipoArquivo {
+  if (!url) {
+    return 'desconhecido';
+  }
+  const caminhoLimpo = url.split('?')[0].toLowerCase();
+  if (caminhoLimpo.endsWith('.pdf')) return 'pdf';
+  if (/(\.jpg|\.jpeg|\.png|\.gif|\.webp)$/.test(caminhoLimpo)) return 'imagem';
+  if (/(\.mp3|\.wav|\.ogg|\.m4a|\.aac)$/.test(caminhoLimpo)) return 'audio';
+  if (/(\.mp4|\.webm|\.ogv|\.mov)$/i.test(caminhoLimpo)) return 'video';
+  return 'desconhecido';
+}
+
+function renderizarVisualizacaoArquivo(
+  urlSegura: string,
+  tipoArquivo: TipoArquivo,
+  nomeArquivoSeguro: string | null,
+) {
+  if (tipoArquivo === 'pdf') {
+    return (
+      <iframe
+        src={urlSegura}
+        title="Pré-visualização do PDF"
+        className="h-96 w-full rounded-md border border-blue-200 bg-white"
+      />
+    );
+  }
+
+  if (tipoArquivo === 'imagem') {
+    return (
+      <img
+        src={urlSegura}
+        alt={nomeArquivoSeguro ?? 'Pré-visualização do arquivo'}
+        className="max-h-[26rem] w-full rounded-md border border-blue-200 object-contain bg-white"
+        loading="lazy"
+      />
+    );
+  }
+
+  if (tipoArquivo === 'audio') {
+    return (
+      <audio
+        controls
+        className="w-full rounded-md border border-blue-200 bg-white"
+        src={urlSegura}
+        controlsList="nodownload"
+      >
+        Seu navegador não suporta a reprodução de áudio.
+      </audio>
+    );
+  }
+
+  if (tipoArquivo === 'video') {
+    return (
+      <video
+        controls
+        className="w-full rounded-md border border-blue-200 bg-black"
+        src={urlSegura}
+        controlsList="nodownload"
+      >
+        Seu navegador não suporta a reprodução de vídeo.
+      </video>
+    );
+  }
+
+  return (
+    <p className="text-sm text-gray-700">
+      Pré-visualização indisponível para este formato. Realize o download para acessar o conteúdo.
+    </p>
+  );
 }
