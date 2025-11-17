@@ -54,6 +54,13 @@ public class EnvioSmsAssincrono {
 
     private String normalizarUrlBase(String urlBase) {
         String urlLimpa = urlBase.trim();
+        boolean terminaComSegmentoConfirmacao = urlLimpa.matches(".*/c/?$");
+        if (!terminaComSegmentoConfirmacao) {
+            urlLimpa = urlLimpa.replaceAll("/+\\z", "");
+            urlLimpa = urlLimpa + "/c/";
+            return urlLimpa;
+        }
+
         if (!urlLimpa.endsWith("/")) {
             urlLimpa = urlLimpa + "/";
         }
