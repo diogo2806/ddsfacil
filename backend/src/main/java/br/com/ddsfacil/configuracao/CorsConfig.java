@@ -13,9 +13,13 @@ public class CorsConfig {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                // Permitir que o frontend (Vite) acesse as rotas /api durante desenvolvimento
+                // Permitir que o frontend acesse as rotas /api em desenvolvimento e producao
                 registry.addMapping("/api/**")
-                        .allowedOrigins("http://localhost:5173")
+                        .allowedOriginPatterns(
+                                "http://localhost:5173",
+                                "https://ddsfacil.valenstech.com.br",
+                                "https://www.ddsfacil.valenstech.com.br",
+                                "https://api-ddsfacil.valenstech.com.br")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true)
