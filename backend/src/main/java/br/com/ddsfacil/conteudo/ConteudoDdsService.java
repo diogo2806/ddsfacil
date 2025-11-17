@@ -13,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class ConteudoDdsService {
@@ -37,11 +39,34 @@ public class ConteudoDdsService {
 
         String url = requisicao.getUrl();
         String arquivoNome = requisicao.getArquivoNome();
-        String arquivoPath = null; // O path é salvo apenas no upload real, aqui usamos a URL
+        String arquivoPath = null;
+        byte[] arquivoDados = null;
+
+        if (tipoEnum == TipoConteudo.ARQUIVO) {
+            MultipartFile arquivo = requisicao.getArquivo();
+            if (arquivo == null || arquivo.isEmpty()) {
+                throw new IllegalArgumentException("O arquivo é obrigatório para conteúdos do tipo ARQUIVO.");
+            }
+
+            String nomeLimpo = StringUtils.cleanPath(Objects.requireNonNull(arquivo.getOriginalFilename(), "Nome do arquivo inválido."));
+            if (nomeLimpo.contains("..")) {
+                throw new IllegalArgumentException("Nome de arquivo inválido.");
+            }
+
+            try {
+                arquivoDados = arquivo.getBytes();
+                arquivoNome = nomeLimpo;
+                url = null;
+                arquivoPath = null;
+            } catch (Exception e) {
+                log.error("Erro ao processar o arquivo enviado.", e);
+                throw new IllegalStateException("Não foi possível processar o arquivo enviado.", e);
+            }
+        }
 
         log.info("Criando novo conteúdo. Título: {}, Tipo: {}", tituloLimpo, tipoEnum);
 
-        ConteudoDdsEntity conteudo = new ConteudoDdsEntity(tituloLimpo, descricaoLimpa, tipoEnum, url, arquivoNome, arquivoPath);
+        ConteudoDdsEntity conteudo = new ConteudoDdsEntity(tituloLimpo, descricaoLimpa, tipoEnum, url, arquivoNome, arquivoPath, arquivoDados);
         ConteudoDdsEntity salvo = conteudoRepositorio.save(conteudo);
         log.info("Conteúdo criado com ID: {}", salvo.getId());
         return mapearParaResposta(salvo);
@@ -73,7 +98,8 @@ public class ConteudoDdsService {
                 conteudo.getTipo().getDescricao(), // Retorna a descrição do Enum
                 conteudo.getUrl(),
                 conteudo.getArquivoNome(),
-                conteudo.getArquivoPath()
+                conteudo.getArquivoPath(),
+                conteudo.getArquivoDados()
         );
     }
 
