@@ -44,6 +44,7 @@ public class ConteudoDdsService {
         String url = requisicao.getUrl();
         String arquivoNome = requisicao.getArquivoNome();
         String arquivoPath = null;
+        byte[] arquivoDados = null;
 
         if (tipoEnum == TipoConteudo.ARQUIVO) {
             MultipartFile arquivo = requisicao.getArquivo();
@@ -56,25 +57,20 @@ public class ConteudoDdsService {
                 throw new IllegalArgumentException("Nome de arquivo inválido.");
             }
 
-            Path pastaUploads = Paths.get("uploads");
             try {
-                Files.createDirectories(pastaUploads);
-                String nomeDestino = System.currentTimeMillis() + "-" + nomeLimpo;
-                Path caminhoDestino = pastaUploads.resolve(nomeDestino).toAbsolutePath();
-                arquivo.transferTo(caminhoDestino);
-
+                arquivoDados = arquivo.getBytes();
                 arquivoNome = nomeLimpo;
-                arquivoPath = caminhoDestino.toString();
-                url = "/uploads/" + nomeDestino;
-            } catch (IOException e) {
-                log.error("Erro ao salvar arquivo enviado.", e);
-                throw new IllegalStateException("Não foi possível salvar o arquivo enviado.", e);
+                url = null;
+                arquivoPath = null;
+            } catch (Exception e) {
+                log.error("Erro ao processar o arquivo enviado.", e);
+                throw new IllegalStateException("Não foi possível processar o arquivo enviado.", e);
             }
         }
 
         log.info("Criando novo conteúdo. Título: {}, Tipo: {}", tituloLimpo, tipoEnum);
 
-        ConteudoDdsEntity conteudo = new ConteudoDdsEntity(tituloLimpo, descricaoLimpa, tipoEnum, url, arquivoNome, arquivoPath);
+        ConteudoDdsEntity conteudo = new ConteudoDdsEntity(tituloLimpo, descricaoLimpa, tipoEnum, url, arquivoNome, arquivoPath, arquivoDados);
         ConteudoDdsEntity salvo = conteudoRepositorio.save(conteudo);
         log.info("Conteúdo criado com ID: {}", salvo.getId());
         return mapearParaResposta(salvo);
@@ -106,7 +102,8 @@ public class ConteudoDdsService {
                 conteudo.getTipo().getDescricao(), // Retorna a descrição do Enum
                 conteudo.getUrl(),
                 conteudo.getArquivoNome(),
-                conteudo.getArquivoPath()
+                conteudo.getArquivoPath(),
+                conteudo.getArquivoDados()
         );
     }
 

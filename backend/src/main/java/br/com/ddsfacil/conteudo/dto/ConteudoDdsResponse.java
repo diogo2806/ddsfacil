@@ -29,7 +29,10 @@ public class ConteudoDdsResponse {
     @Schema(description = "Caminho do arquivo (se tipo ARQUIVO)", example = "/uploads/12345-manual.pdf")
     private final String arquivoPath;
 
-    public ConteudoDdsResponse(Long id, String titulo, String descricao, String tipo, String url, String arquivoNome, String arquivoPath) {
+    @Schema(description = "Conteúdo binário do arquivo (se tipo ARQUIVO)")
+    private final byte[] arquivoDados;
+
+    public ConteudoDdsResponse(Long id, String titulo, String descricao, String tipo, String url, String arquivoNome, String arquivoPath, byte[] arquivoDados) {
         this.id = id;
         this.titulo = titulo;
         this.descricao = descricao;
@@ -37,5 +40,6 @@ public class ConteudoDdsResponse {
         this.url = url;
         this.arquivoNome = arquivoNome;
         this.arquivoPath = arquivoPath;
+        this.arquivoDados = arquivoDados;
     }
 }

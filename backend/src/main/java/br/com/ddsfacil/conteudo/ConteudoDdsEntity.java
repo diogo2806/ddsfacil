@@ -8,6 +8,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -46,13 +47,18 @@ public class ConteudoDdsEntity {
     @Column(name = "arquivo_path", length = 1000)
     private String arquivoPath;
 
+    @Lob
+    @Column(name = "arquivo_dados")
+    private byte[] arquivoDados;
+
     // Construtor mantido para compatibilidade com o AllArgsConstructor gerado
-    public ConteudoDdsEntity(String titulo, String descricao, TipoConteudo tipo, String url, String arquivoNome, String arquivoPath) {
+    public ConteudoDdsEntity(String titulo, String descricao, TipoConteudo tipo, String url, String arquivoNome, String arquivoPath, byte[] arquivoDados) {
         this.titulo = titulo;
         this.descricao = descricao;
         this.tipo = tipo;
         this.url = url;
         this.arquivoNome = arquivoNome;
         this.arquivoPath = arquivoPath;
+        this.arquivoDados = arquivoDados;
     }
 }
