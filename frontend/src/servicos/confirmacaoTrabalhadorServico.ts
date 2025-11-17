@@ -20,7 +20,7 @@ export async function consultarConteudoDds(token: string): Promise<DadosConfirma
     throw new Error('Token inválido.');
   }
   const resposta = await clienteHttp.get<DadosConfirmacaoTrabalhador>(
-    `/public/dds/${encodeURIComponent(tokenLimpo)}`,
+    `/api/public/dds/${encodeURIComponent(tokenLimpo)}`,
   );
   return resposta.data;
 }
@@ -31,7 +31,7 @@ export async function confirmarLeituraDds(token: string): Promise<RespostaConfir
     throw new Error('Token inválido.');
   }
   const resposta = await clienteHttp.post<RespostaConfirmacao>(
-    `/public/dds/${encodeURIComponent(tokenLimpo)}/confirmar`,
+    `/api/public/dds/${encodeURIComponent(tokenLimpo)}/confirmar`,
     {},
   );
   return resposta.data;
