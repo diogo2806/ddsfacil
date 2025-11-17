@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.web.multipart.MultipartFile;
 
 @Schema(description = "DTO para criação de um novo conteúdo de DDS")
 @Getter
@@ -30,4 +31,7 @@ public class ConteudoDdsRequest {
 
     @Schema(description = "Nome do arquivo (para tipo ARQUIVO, gerenciado pelo endpoint /upload)", example = "manual.pdf")
     private String arquivoNome;
+
+    @Schema(description = "Arquivo recebido no upload (apenas para tipo ARQUIVO)", type = "string", format = "binary")
+    private MultipartFile arquivo;
 }

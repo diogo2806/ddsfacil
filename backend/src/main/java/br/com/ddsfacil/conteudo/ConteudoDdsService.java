@@ -4,6 +4,10 @@ package br.com.ddsfacil.conteudo;
 import br.com.ddsfacil.conteudo.dto.ConteudoDdsRequest;
 import br.com.ddsfacil.conteudo.dto.ConteudoDdsResponse;
 import br.com.ddsfacil.excecao.RecursoNaoEncontradoException;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -13,6 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class ConteudoDdsService {
@@ -37,7 +43,34 @@ public class ConteudoDdsService {
 
         String url = requisicao.getUrl();
         String arquivoNome = requisicao.getArquivoNome();
-        String arquivoPath = null; // O path é salvo apenas no upload real, aqui usamos a URL
+        String arquivoPath = null;
+
+        if (tipoEnum == TipoConteudo.ARQUIVO) {
+            MultipartFile arquivo = requisicao.getArquivo();
+            if (arquivo == null || arquivo.isEmpty()) {
+                throw new IllegalArgumentException("O arquivo é obrigatório para conteúdos do tipo ARQUIVO.");
+            }
+
+            String nomeLimpo = StringUtils.cleanPath(Objects.requireNonNull(arquivo.getOriginalFilename(), "Nome do arquivo inválido."));
+            if (nomeLimpo.contains("..")) {
+                throw new IllegalArgumentException("Nome de arquivo inválido.");
+            }
+
+            Path pastaUploads = Paths.get("uploads");
+            try {
+                Files.createDirectories(pastaUploads);
+                String nomeDestino = System.currentTimeMillis() + "-" + nomeLimpo;
+                Path caminhoDestino = pastaUploads.resolve(nomeDestino).toAbsolutePath();
+                arquivo.transferTo(caminhoDestino);
+
+                arquivoNome = nomeLimpo;
+                arquivoPath = caminhoDestino.toString();
+                url = "/uploads/" + nomeDestino;
+            } catch (IOException e) {
+                log.error("Erro ao salvar arquivo enviado.", e);
+                throw new IllegalStateException("Não foi possível salvar o arquivo enviado.", e);
+            }
+        }
 
         log.info("Criando novo conteúdo. Título: {}, Tipo: {}", tituloLimpo, tipoEnum);
 

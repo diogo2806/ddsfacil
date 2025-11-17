@@ -6,10 +6,6 @@ import br.com.ddsfacil.conteudo.dto.ConteudoDdsResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path; // 1. Importar Path
-import java.nio.file.Paths; // 2. Importar Paths
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -64,36 +60,15 @@ public class ConteudoDdsController {
             @RequestParam(value = "descricao", required = false) String descricao,
             @RequestParam(value = "tipo", required = false) String tipo,
             @RequestParam("file") MultipartFile file
-    ) throws IOException {
+    ) {
+        String nomeOriginal = StringUtils.cleanPath(file.getOriginalFilename());
 
-        // --- CORREÇÃO INICIA AQUI ---
-
-        // 3. Definir o diretório de uploads usando Path
-        String uploadsDir = "uploads";
-        Path uploadsPath = Paths.get(uploadsDir);
-        File uploadsFolder = uploadsPath.toFile();
-
-        if (!uploadsFolder.exists()) {
-            uploadsFolder.mkdirs();
-        }
-        String original = StringUtils.cleanPath(file.getOriginalFilename());
-        String targetName = System.currentTimeMillis() + "-" + original;
-
-        // 4. Criar o caminho de destino absoluto
-        Path destino = uploadsPath.resolve(targetName).toAbsolutePath();
-
-        // 5. Usar o método transferTo(Path)
-        file.transferTo(destino);
-
-        // --- CORREÇÃO TERMINA AQUI ---
-
-        // construir requisicao manualmente e delegar a serviço
         ConteudoDdsRequest req = new ConteudoDdsRequest();
         req.setTitulo(titulo);
         req.setDescricao(descricao == null ? "" : descricao);
         req.setTipo(tipo == null ? "ARQUIVO" : tipo); // O serviço fará a conversão
-        req.setArquivoNome(original);
-        req.setUrl("/uploads/" + targetName); // A URL salva no banco continua relativa (correto)
+        req.setArquivoNome(nomeOriginal);
+        req.setArquivo(file);
         return conteudoServico.criar(req);
     }
 }
