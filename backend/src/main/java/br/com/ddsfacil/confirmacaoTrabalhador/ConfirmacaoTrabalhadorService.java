@@ -5,6 +5,7 @@ import br.com.ddsfacil.confirmacaoTrabalhador.dto.ConfirmacaoTrabalhadorResponse
 import br.com.ddsfacil.envio.EnvioDdsEntity;
 import br.com.ddsfacil.envio.EnvioDdsRepository;
 import br.com.ddsfacil.excecao.RecursoNaoEncontradoException;
+import br.com.ddsfacil.conteudo.TipoConteudo;
 import java.time.LocalDateTime;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
@@ -25,7 +26,11 @@ public class ConfirmacaoTrabalhadorService {
         EnvioDdsEntity envio = localizarPorToken(tokenAcesso);
         String titulo = Jsoup.clean(envio.getConteudo().getTitulo(), Safelist.none()).strip();
         String descricao = Jsoup.clean(envio.getConteudo().getDescricao(), Safelist.none()).strip();
-        return new ConfirmacaoTrabalhadorResponse(titulo, descricao);
+        TipoConteudo tipoConteudo = envio.getConteudo().getTipo();
+        String urlConteudo = limparCampoOpcional(envio.getConteudo().getUrl());
+        String nomeArquivo = limparCampoOpcional(envio.getConteudo().getArquivoNome());
+
+        return new ConfirmacaoTrabalhadorResponse(titulo, descricao, tipoConteudo, urlConteudo, nomeArquivo);
     }
 
     @Transactional
@@ -43,5 +48,10 @@ public class ConfirmacaoTrabalhadorService {
         return envioRepositorio
             .findByTokenAcesso(tokenSanitizado)
             .orElseThrow(() -> new RecursoNaoEncontradoException("Envio não encontrado para o token informado."));
+    }
+
+    private String limparCampoOpcional(String valor) {
+        String valorLimpo = Jsoup.clean(valor == null ? "" : valor, Safelist.none()).trim();
+        return valorLimpo.isEmpty() ? null : valorLimpo;
     }
 }

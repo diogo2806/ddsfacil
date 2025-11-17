@@ -7,6 +7,7 @@ import {
   consultarConteudoDds,
   DadosConfirmacaoTrabalhador,
 } from '../../servicos/confirmacaoTrabalhadorServico';
+import { TipoConteudo } from '../../types/enums';
 
 export default function PaginaConfirmacaoTrabalhador() {
   const parametros = useParams<{ token: string }>();
@@ -54,9 +55,11 @@ export default function PaginaConfirmacaoTrabalhador() {
     );
   }
 
-  const { titulo, descricao } = consultaConteudo.data;
+  const { titulo, descricao, tipoConteudo, urlConteudo, nomeArquivo } = consultaConteudo.data;
   const tituloSeguro = sanitizarTexto(titulo);
   const descricaoSegura = sanitizarTexto(descricao);
+  const urlSegura = sanitizarUrl(urlConteudo);
+  const nomeArquivoSeguro = sanitizarNomeArquivo(nomeArquivo);
   const confirmacaoConcluida = mutacaoConfirmacao.isSuccess;
 
   return (
@@ -68,7 +71,48 @@ export default function PaginaConfirmacaoTrabalhador() {
 
       <article className="rounded-xl border border-gray-200 bg-white p-6 shadow">
         <h2 className="text-xl font-semibold text-gray-900">{tituloSeguro}</h2>
-        <p className="mt-4 whitespace-pre-line text-base text-gray-700">{descricaoSegura}</p>
+        {tipoConteudo === TipoConteudo.TEXTO && (
+          <p className="mt-4 whitespace-pre-line text-base text-gray-700">{descricaoSegura}</p>
+        )}
+        {tipoConteudo === TipoConteudo.LINK && urlSegura && (
+          <div className="mt-4 space-y-2 rounded-lg bg-blue-50 p-4 text-base text-gray-700">
+            <p className="font-medium">Acesse o DDS pelo link seguro abaixo:</p>
+            <a
+              href={urlSegura}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+            >
+              Abrir conteúdo
+            </a>
+          </div>
+        )}
+        {tipoConteudo === TipoConteudo.ARQUIVO && urlSegura && (
+          <div className="mt-4 space-y-3 rounded-lg bg-blue-50 p-4 text-base text-gray-700">
+            <p className="font-medium">Faça o download do arquivo do DDS para leitura.</p>
+            <a
+              href={urlSegura}
+              target="_blank"
+              rel="noopener noreferrer"
+              download={nomeArquivoSeguro ?? undefined}
+              className="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+            >
+              {nomeArquivoSeguro ? `Baixar ${nomeArquivoSeguro}` : 'Baixar arquivo'}
+            </a>
+            {urlSegura.toLowerCase().endsWith('.pdf') && (
+              <iframe
+                src={urlSegura}
+                title="Pré-visualização do arquivo"
+                className="h-96 w-full rounded-md border border-blue-200"
+              />
+            )}
+          </div>
+        )}
+        {!urlSegura && tipoConteudo !== TipoConteudo.TEXTO && (
+          <p className="mt-4 text-sm text-red-700">
+            Não foi possível carregar o conteúdo associado. Solicite um novo link ao seu líder.
+          </p>
+        )}
       </article>
 
       <div className="mt-6">
@@ -124,4 +168,20 @@ function MensagemEstado({ titulo, descricao }: MensagemEstadoProps) {
 
 function sanitizarTexto(valor: string): string {
   return DOMPurify.sanitize(valor, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }).trim();
+}
+
+function sanitizarUrl(valor: string | null): string | null {
+  const urlLimpa = DOMPurify.sanitize(valor ?? '', { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }).trim();
+  if (!urlLimpa) {
+    return null;
+  }
+  const urlValida = /^https?:\/\/|^\//i;
+  return urlValida.test(urlLimpa) ? urlLimpa : null;
+}
+
+function sanitizarNomeArquivo(valor: string | null): string | null {
+  const textoLimpo = DOMPurify.sanitize(valor ?? '', { ALLOWED_TAGS: [], ALLOWED_ATTR: [] })
+    .replace(/[^\w.\- ]/g, '')
+    .trim();
+  return textoLimpo.length > 0 ? textoLimpo : null;
 }
