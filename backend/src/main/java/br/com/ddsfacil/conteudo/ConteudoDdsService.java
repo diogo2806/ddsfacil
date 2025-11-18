@@ -3,11 +3,8 @@ package br.com.ddsfacil.conteudo;
 
 import br.com.ddsfacil.conteudo.dto.ConteudoDdsRequest;
 import br.com.ddsfacil.conteudo.dto.ConteudoDdsResponse;
+import br.com.ddsfacil.conteudo.dto.ConteudoDdsArquivoResponse;
 import br.com.ddsfacil.excecao.RecursoNaoEncontradoException;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -15,6 +12,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.http.MediaTypeFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -43,7 +42,6 @@ public class ConteudoDdsService {
 
         String url = requisicao.getUrl();
         String arquivoNome = requisicao.getArquivoNome();
-        String arquivoPath = null;
         byte[] arquivoDados = null;
 
         if (tipoEnum == TipoConteudo.ARQUIVO) {
@@ -61,7 +59,6 @@ public class ConteudoDdsService {
                 arquivoDados = arquivo.getBytes();
                 arquivoNome = nomeLimpo;
                 url = null;
-                arquivoPath = null;
             } catch (Exception e) {
                 log.error("Erro ao processar o arquivo enviado.", e);
                 throw new IllegalStateException("Não foi possível processar o arquivo enviado.", e);
@@ -70,7 +67,7 @@ public class ConteudoDdsService {
 
         log.info("Criando novo conteúdo. Título: {}, Tipo: {}", tituloLimpo, tipoEnum);
 
-        ConteudoDdsEntity conteudo = new ConteudoDdsEntity(tituloLimpo, descricaoLimpa, tipoEnum, url, arquivoNome, arquivoPath, arquivoDados);
+        ConteudoDdsEntity conteudo = new ConteudoDdsEntity(tituloLimpo, descricaoLimpa, tipoEnum, url, arquivoNome, null, arquivoDados);
         ConteudoDdsEntity salvo = conteudoRepositorio.save(conteudo);
         log.info("Conteúdo criado com ID: {}", salvo.getId());
         return mapearParaResposta(salvo);
@@ -81,6 +78,29 @@ public class ConteudoDdsService {
         return conteudoRepositorio.findAll().stream()
                 .map(this::mapearParaResposta)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public ConteudoDdsArquivoResponse buscarArquivo(Long id) {
+        ConteudoDdsEntity conteudo = conteudoRepositorio
+                .findById(id)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Conteúdo não encontrado."));
+
+        if (conteudo.getTipo() != TipoConteudo.ARQUIVO) {
+            throw new RecursoNaoEncontradoException("Nenhum arquivo disponível para este conteúdo.");
+        }
+
+        byte[] dadosArquivo = conteudo.getArquivoDados();
+        if (dadosArquivo == null || dadosArquivo.length == 0) {
+            throw new RecursoNaoEncontradoException("Arquivo do conteúdo não encontrado ou vazio.");
+        }
+
+        String nomeArquivo = conteudo.getArquivoNome() == null ? "arquivo-dds" : conteudo.getArquivoNome();
+        MediaType tipoMidia = MediaTypeFactory
+                .getMediaType(nomeArquivo)
+                .orElse(MediaType.APPLICATION_OCTET_STREAM);
+
+        return new ConteudoDdsArquivoResponse(nomeArquivo, tipoMidia, dadosArquivo);
     }
 
     @Transactional
@@ -102,7 +122,6 @@ public class ConteudoDdsService {
                 conteudo.getTipo().getDescricao(), // Retorna a descrição do Enum
                 conteudo.getUrl(),
                 conteudo.getArquivoNome(),
-                conteudo.getArquivoPath(),
                 conteudo.getArquivoDados()
         );
     }

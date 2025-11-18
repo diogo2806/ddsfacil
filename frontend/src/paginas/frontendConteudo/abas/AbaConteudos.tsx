@@ -212,9 +212,9 @@ export default function AbaConteudos({ exibirNotificacao }: Props) {
                         >
                           Abrir link
                         </a>
-                      ) : conteudo.tipo === TipoConteudo.ARQUIVO && conteudo.arquivoPath ? (
+                      ) : conteudo.tipo === TipoConteudo.ARQUIVO ? (
                         <a
-                          href={conteudo.arquivoPath}
+                          href={`/api/conteudos/${conteudo.id}/arquivo`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-blue-600 underline"

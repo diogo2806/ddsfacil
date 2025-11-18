@@ -9,7 +9,6 @@ export type ConteudoDds = {
   tipo?: TipoConteudo;
   url?: string | null;
   arquivoNome?: string | null;
-  arquivoPath?: string | null;
 };
 export type CadastroConteudo = {
   titulo: string;

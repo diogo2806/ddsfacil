@@ -1,6 +1,7 @@
 // Arquivo: backend/src/main/java/br/com/ddsfacil/conteudo/ConteudoDdsController.java
 package br.com.ddsfacil.conteudo;
 
+import br.com.ddsfacil.conteudo.dto.ConteudoDdsArquivoResponse;
 import br.com.ddsfacil.conteudo.dto.ConteudoDdsRequest;
 import br.com.ddsfacil.conteudo.dto.ConteudoDdsResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -8,7 +9,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.core.io.ByteArrayResource;
 
 @RestController
 @RequestMapping("/api/conteudos")
@@ -50,6 +54,18 @@ public class ConteudoDdsController {
     @Operation(summary = "Exclui um conteúdo de DDS pelo ID")
     public void excluir(@PathVariable Long id) {
         conteudoServico.remover(id);
+    }
+
+    @GetMapping(path = "/{id}/arquivo")
+    @Operation(summary = "Recupera o arquivo binário de um conteúdo do tipo ARQUIVO")
+    public ResponseEntity<ByteArrayResource> baixarArquivo(@PathVariable Long id) {
+        ConteudoDdsArquivoResponse arquivo = conteudoServico.buscarArquivo(id);
+        ByteArrayResource recurso = new ByteArrayResource(arquivo.getDados());
+
+        return ResponseEntity.ok()
+                .contentType(arquivo.getTipoMidia())
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + arquivo.getNomeArquivo() + "\"")
+                .body(recurso);
     }
 
     @PostMapping(path = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
