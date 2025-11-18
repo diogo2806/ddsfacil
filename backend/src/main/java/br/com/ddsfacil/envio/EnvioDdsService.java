@@ -5,7 +5,7 @@ import br.com.ddsfacil.conteudo.ConteudoDdsEntity;
 import br.com.ddsfacil.conteudo.ConteudoDdsRepository;
 import br.com.ddsfacil.envio.dto.EnvioDdsRequest;
 import br.com.ddsfacil.envio.dto.EnvioDdsResponse;
-import br.com.ddsfacil.envio.sms.EnvioSmsAssincrono;
+import br.com.ddsfacil.envio.sms.EnvioSmsProcessadorDeJobs;
 import br.com.ddsfacil.excecao.RecursoNaoEncontradoException;
 import br.com.ddsfacil.funcionario.FuncionarioEntity;
 import br.com.ddsfacil.funcionario.FuncionarioRepository;
@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.jobrunr.scheduling.JobScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -29,18 +30,21 @@ public class EnvioDdsService {
     private final EnvioDdsRepository envioRepositorio;
     private final FuncionarioRepository funcionarioRepository;
     private final ConteudoDdsRepository conteudoRepositorio;
-    private final EnvioSmsAssincrono envioSmsAssincrono;
+    private final JobScheduler agendadorDeJobs;
+    private final EnvioSmsProcessadorDeJobs processadorDeJobs;
 
     public EnvioDdsService(
             EnvioDdsRepository envioRepositorio,
             FuncionarioRepository funcionarioRepository,
             ConteudoDdsRepository conteudoRepositorio,
-            EnvioSmsAssincrono envioSmsAssincrono
+            JobScheduler agendadorDeJobs,
+            EnvioSmsProcessadorDeJobs processadorDeJobs
     ) {
         this.envioRepositorio = envioRepositorio;
         this.funcionarioRepository = funcionarioRepository;
         this.conteudoRepositorio = conteudoRepositorio;
-        this.envioSmsAssincrono = envioSmsAssincrono;
+        this.agendadorDeJobs = agendadorDeJobs;
+        this.processadorDeJobs = processadorDeJobs;
     }
 
     @Transactional
@@ -95,8 +99,8 @@ public class EnvioDdsService {
         }
 
         List<EnvioDdsEntity> salvos = envioRepositorio.saveAll(novosEnvios);
-        envioSmsAssincrono.enviarMensagens(salvos);
-        log.info("Envio de {} SMSs iniciado de forma assíncrona.", salvos.size());
+        agendarEnvioDeSms(salvos);
+        log.info("Envio de {} SMSs agendado no JobRunr.", salvos.size());
 
         return salvos.stream().map(this::mapearParaResposta).toList();
     }
@@ -126,6 +130,12 @@ public class EnvioDdsService {
         envio.confirmar(LocalDateTime.now());
         log.info("Envio ID: {} confirmado com sucesso.", id);
         return mapearParaResposta(envio);
+    }
+
+    private void agendarEnvioDeSms(List<EnvioDdsEntity> envios) {
+        envios.forEach(envio -> agendadorDeJobs.enqueue(
+                () -> processadorDeJobs.processarEnvioUnitario(envio.getId())
+        ));
     }
 
     private EnvioDdsResponse mapearParaResposta(EnvioDdsEntity envio) {

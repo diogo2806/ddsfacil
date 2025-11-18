@@ -67,7 +67,7 @@ public class EnvioDdsEntity {
         this.conteudo = conteudo;
         this.dataEnvio = dataEnvio;
         this.momentoEnvio = momentoEnvio;
-        this.status = StatusEnvioDds.ENVIADO;
+        this.status = StatusEnvioDds.PENDENTE;
         this.tokenAcesso = gerarToken();
     }
 
@@ -77,6 +77,14 @@ public class EnvioDdsEntity {
         }
         this.status = StatusEnvioDds.CONFIRMADO;
         this.momentoConfirmacao = momento;
+    }
+
+    public void marcarComoEnviado(LocalDateTime momento) {
+        if (this.status == StatusEnvioDds.CONFIRMADO) {
+            return;
+        }
+        this.status = StatusEnvioDds.ENVIADO;
+        this.momentoEnvio = momento;
     }
 
     @PrePersist
