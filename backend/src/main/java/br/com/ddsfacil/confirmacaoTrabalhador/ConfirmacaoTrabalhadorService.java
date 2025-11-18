@@ -8,10 +8,6 @@ import br.com.ddsfacil.conteudo.TipoConteudo;
 import br.com.ddsfacil.envio.EnvioDdsEntity;
 import br.com.ddsfacil.envio.EnvioDdsRepository;
 import br.com.ddsfacil.excecao.RecursoNaoEncontradoException;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
@@ -93,10 +89,6 @@ public class ConfirmacaoTrabalhadorService {
         String urlLimpa = limparCampoOpcional(conteudo.getUrl());
 
         if (conteudo.getTipo() == TipoConteudo.ARQUIVO) {
-            String caminhoArquivoLimpo = normalizarCaminhoArquivo(conteudo.getArquivoPath());
-            if (caminhoArquivoLimpo != null) {
-                return caminhoArquivoLimpo;
-            }
             return "/api/public/dds/" + tokenSanitizado + "/arquivo";
         }
 
@@ -108,47 +100,10 @@ public class ConfirmacaoTrabalhadorService {
         return valorLimpo.isEmpty() ? null : valorLimpo;
     }
 
-    private String normalizarCaminhoArquivo(String caminho) {
-        String caminhoLimpo = limparCampoOpcional(caminho);
-        if (caminhoLimpo == null) {
-            return null;
-        }
-
-        String caminhoNormalizado = caminhoLimpo.replace("\\", "/");
-        if (caminhoNormalizado.contains("..")) {
-            return null;
-        }
-
-        if (caminhoNormalizado.startsWith("/")) {
-            return caminhoNormalizado;
-        }
-
-        return "/" + caminhoNormalizado;
-    }
-
     private byte[] obterDadosArquivo(ConteudoDdsEntity conteudo) {
         if (conteudo.getArquivoDados() != null && conteudo.getArquivoDados().length > 0) {
             return conteudo.getArquivoDados();
         }
-
-        String caminhoArquivo = normalizarCaminhoArquivo(conteudo.getArquivoPath());
-        if (caminhoArquivo == null) {
-            return null;
-        }
-
-        Path pathArquivo = Paths.get(caminhoArquivo.replaceFirst("^/", ""));
-        if (!Files.exists(pathArquivo) || !Files.isRegularFile(pathArquivo)) {
-            return null;
-        }
-
-        if (!pathArquivo.startsWith(Paths.get("uploads"))) {
-            return null;
-        }
-
-        try {
-            return Files.readAllBytes(pathArquivo);
-        } catch (IOException e) {
-            return null;
-        }
+        return null;
     }
 }
