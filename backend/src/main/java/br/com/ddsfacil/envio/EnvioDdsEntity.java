@@ -25,6 +25,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.annotations.Filter;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 
 @Entity
 @Table(name = "envios_dds", indexes = @Index(name = "idx_envios_dds_empresa_id", columnList = "empresa_id"))
@@ -68,6 +70,9 @@ public class EnvioDdsEntity {
     @Column(name = "empresa_id", nullable = false)
     private Long empresaId;
 
+    @Column(name = "erro_entrega", length = 500)
+    private String erroEntrega;
+
     public EnvioDdsEntity(
             FuncionarioEntity funcionarioEntity,
             ConteudoDdsEntity conteudo,
@@ -98,6 +103,15 @@ public class EnvioDdsEntity {
         }
         this.status = StatusEnvioDds.ENVIADO;
         this.momentoEnvio = momento;
+        this.erroEntrega = null;
+    }
+
+    public void registrarFalhaEntrega(String descricaoErro) {
+        if (this.status == StatusEnvioDds.CONFIRMADO) {
+            return;
+        }
+        this.status = StatusEnvioDds.FALHA;
+        this.erroEntrega = descricaoErro == null ? null : Jsoup.clean(descricaoErro, Safelist.none()).strip();
     }
 
     @PrePersist

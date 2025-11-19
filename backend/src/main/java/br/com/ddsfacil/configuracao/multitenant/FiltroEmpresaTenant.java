@@ -7,13 +7,16 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import org.hibernate.Session;
+import br.com.ddsfacil.seguranca.UsuarioAutenticado;
 import org.hibernate.Filter;
+import org.hibernate.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -39,22 +42,15 @@ public class FiltroEmpresaTenant extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        String empresaHeader = request.getHeader(CABECALHO_EMPRESA);
-        if (!StringUtils.hasText(empresaHeader)) {
-            LOGGER.warn("Requisição sem o cabeçalho obrigatório {}.", CABECALHO_EMPRESA);
-            response.sendError(HttpStatus.BAD_REQUEST.value(), "Cabeçalho X-Empresa-Id é obrigatório para acessar a API.");
+        UsuarioAutenticado usuarioAutenticado = obterUsuarioAutenticado();
+        if (usuarioAutenticado == null) {
+            response.sendError(HttpStatus.UNAUTHORIZED.value(), "Token JWT inválido ou ausente.");
             return;
         }
-
-        Long empresaId;
-        try {
-            empresaId = Long.parseLong(empresaHeader);
-        } catch (NumberFormatException ex) {
-            LOGGER.warn("Valor inválido recebido para o cabeçalho {}: {}", CABECALHO_EMPRESA, empresaHeader);
-            response.sendError(HttpStatus.BAD_REQUEST.value(), "Cabeçalho X-Empresa-Id deve ser numérico.");
+        Long empresaId = usuarioAutenticado.getEmpresaId();
+        if (!validarCabecalhoEmpresa(request, response, empresaId)) {
             return;
         }
-
         ContextoEmpresa.definirEmpresaId(empresaId);
         Session session = entityManager.unwrap(Session.class);
         Filter filtroEmpresa = session.enableFilter("filtroEmpresa");
@@ -65,5 +61,37 @@ public class FiltroEmpresaTenant extends OncePerRequestFilter {
             session.disableFilter("filtroEmpresa");
             ContextoEmpresa.limpar();
         }
+    }
+
+    private boolean validarCabecalhoEmpresa(HttpServletRequest request, HttpServletResponse response, Long empresaId)
+            throws IOException {
+        String empresaHeader = request.getHeader(CABECALHO_EMPRESA);
+        if (!StringUtils.hasText(empresaHeader)) {
+            return true;
+        }
+        try {
+            Long empresaHeaderId = Long.parseLong(empresaHeader);
+            if (!empresaHeaderId.equals(empresaId)) {
+                LOGGER.warn("Tentativa de acessar empresa {} informando cabeçalho {}.", empresaId, empresaHeaderId);
+                response.sendError(HttpStatus.FORBIDDEN.value(), "Cabeçalho X-Empresa-Id não coincide com o token JWT.");
+                return false;
+            }
+            return true;
+        } catch (NumberFormatException ex) {
+            response.sendError(HttpStatus.BAD_REQUEST.value(), "Cabeçalho X-Empresa-Id deve ser numérico.");
+            return false;
+        }
+    }
+
+    private UsuarioAutenticado obterUsuarioAutenticado() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            return null;
+        }
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof UsuarioAutenticado usuarioAutenticado) {
+            return usuarioAutenticado;
+        }
+        return null;
     }
 }

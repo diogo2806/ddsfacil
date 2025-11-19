@@ -41,6 +41,9 @@ public class EnvioDdsResponse {
     @Schema(description = "Momento da confirmação (se houver)")
     private final LocalDateTime momentoConfirmacao;
 
+    @Schema(description = "Descrição da falha de entrega, se houver")
+    private final String mensagemErroEntrega;
+
     public EnvioDdsResponse(
             Long id,
             Long funcionarioId,
@@ -51,7 +54,8 @@ public class EnvioDdsResponse {
             StatusEnvioDds status,
             LocalDate dataEnvio,
             LocalDateTime momentoEnvio,
-            LocalDateTime momentoConfirmacao
+            LocalDateTime momentoConfirmacao,
+            String mensagemErroEntrega
     ) {
         this.id = id;
         this.funcionarioId = funcionarioId;
@@ -63,5 +67,6 @@ public class EnvioDdsResponse {
         this.dataEnvio = dataEnvio;
         this.momentoEnvio = momentoEnvio;
         this.momentoConfirmacao = momentoConfirmacao;
+        this.mensagemErroEntrega = mensagemErroEntrega;
     }
 }

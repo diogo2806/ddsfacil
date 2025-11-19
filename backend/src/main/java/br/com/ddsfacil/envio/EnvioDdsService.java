@@ -10,6 +10,7 @@ import br.com.ddsfacil.envio.sms.EnvioSmsProcessadorDeJobs;
 import br.com.ddsfacil.excecao.RecursoNaoEncontradoException;
 import br.com.ddsfacil.funcionario.FuncionarioEntity;
 import br.com.ddsfacil.funcionario.FuncionarioRepository;
+import br.com.ddsfacil.licenca.LicencaService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -33,19 +34,22 @@ public class EnvioDdsService {
     private final ConteudoDdsRepository conteudoRepositorio;
     private final JobScheduler agendadorDeJobs;
     private final EnvioSmsProcessadorDeJobs processadorDeJobs;
+    private final LicencaService licencaService;
 
     public EnvioDdsService(
             EnvioDdsRepository envioRepositorio,
             FuncionarioRepository funcionarioRepository,
             ConteudoDdsRepository conteudoRepositorio,
             JobScheduler agendadorDeJobs,
-            EnvioSmsProcessadorDeJobs processadorDeJobs
+            EnvioSmsProcessadorDeJobs processadorDeJobs,
+            LicencaService licencaService
     ) {
         this.envioRepositorio = envioRepositorio;
         this.funcionarioRepository = funcionarioRepository;
         this.conteudoRepositorio = conteudoRepositorio;
         this.agendadorDeJobs = agendadorDeJobs;
         this.processadorDeJobs = processadorDeJobs;
+        this.licencaService = licencaService;
     }
 
     @Transactional
@@ -100,6 +104,7 @@ public class EnvioDdsService {
             return List.of();
         }
 
+        licencaService.debitarSms(empresaId, novosEnvios.size());
         List<EnvioDdsEntity> salvos = envioRepositorio.saveAll(novosEnvios);
         agendarEnvioDeSms(salvos);
         log.info("Envio de {} SMSs agendado no JobRunr.", salvos.size());
@@ -151,7 +156,8 @@ public class EnvioDdsService {
                 envio.getStatus(),
                 envio.getDataEnvio(),
                 envio.getMomentoEnvio(),
-                envio.getMomentoConfirmacao()
+                envio.getMomentoConfirmacao(),
+                envio.getErroEntrega()
         );
     }
 }
