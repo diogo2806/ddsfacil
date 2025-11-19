@@ -21,8 +21,9 @@ export enum TipoNotificacao {
 }
 
 export enum StatusEnvio {
-  ENVIADO = 'ENVIADO',
-  CONFIRMADO = 'CONFIRMADO',
+  PENDENTE = 'Pendente',
+  ENVIADO = 'Enviado',
+  CONFIRMADO = 'Confirmado',
 }
 
 export enum AbaAdmin {
