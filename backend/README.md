@@ -23,3 +23,7 @@ docker build -t ddsfacil-backend .
 ```
 
 If you don't have Java 21 installed locally, use the provided Dockerfile which builds with a Temurin 21-based Maven image.
+
+## Multi-tenant (Isolamento por Empresa)
+
+Todas as chamadas privadas da API exigem o envio do cabeçalho `X-Empresa-Id` com o identificador numérico da empresa. Esse valor é usado pelo filtro global do Hibernate para garantir que cada consulta retorne apenas os dados da empresa informada. Os endpoints públicos sob `/api/public/**` continuam acessíveis sem o cabeçalho, pois são utilizados pelos trabalhadores via token seguro.

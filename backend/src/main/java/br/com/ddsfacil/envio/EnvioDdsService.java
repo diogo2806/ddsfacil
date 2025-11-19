@@ -1,6 +1,7 @@
 // Arquivo: backend/src/main/java/br/com/ddsfacil/envio/EnvioDdsService.java
 package br.com.ddsfacil.envio;
 
+import br.com.ddsfacil.configuracao.multitenant.ContextoEmpresa;
 import br.com.ddsfacil.conteudo.ConteudoDdsEntity;
 import br.com.ddsfacil.conteudo.ConteudoDdsRepository;
 import br.com.ddsfacil.envio.dto.EnvioDdsRequest;
@@ -50,6 +51,7 @@ public class EnvioDdsService {
     @Transactional
     public List<EnvioDdsResponse> enviar(EnvioDdsRequest requisicao) {
         Objects.requireNonNull(requisicao, "Requisição não pode ser nula.");
+        Long empresaId = ContextoEmpresa.obterEmpresaIdObrigatorio();
 
         ConteudoDdsEntity conteudo = conteudoRepositorio
                 .findById(requisicao.getConteudoId())
@@ -89,7 +91,7 @@ public class EnvioDdsService {
                 continue;
             }
             LocalDateTime momentoEnvio = LocalDateTime.now();
-            EnvioDdsEntity envio = new EnvioDdsEntity(funcionarioEntity, conteudo, dataEnvio, momentoEnvio);
+            EnvioDdsEntity envio = new EnvioDdsEntity(funcionarioEntity, conteudo, dataEnvio, momentoEnvio, empresaId);
             novosEnvios.add(envio);
         }
 
