@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public enum StatusEnvioDds {
+    PENDENTE("Pendente"),
     ENVIADO("Enviado"),
     CONFIRMADO("Confirmado");
 
