@@ -13,4 +13,7 @@ public interface LicencaRepository extends JpaRepository<LicencaEntity, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select licenca from LicencaEntity licenca where licenca.empresa.id = :empresaId")
     Optional<LicencaEntity> buscarPorEmpresaIdParaAtualizacao(@Param("empresaId") Long empresaId);
+
+    @Query("select licenca from LicencaEntity licenca where licenca.empresa.id = :empresaId")
+    Optional<LicencaEntity> buscarPorEmpresaId(@Param("empresaId") Long empresaId);
 }

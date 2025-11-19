@@ -28,7 +28,7 @@ public class LicencaService {
 
     @Transactional(readOnly = true)
     public SaldoResponse consultarSaldo(Long empresaId) {
-        return licencaRepository.buscarPorEmpresaIdParaAtualizacao(empresaId) // Pode reusar ou criar um findByEmpresaId simples
+        return licencaRepository.buscarPorEmpresaId(empresaId)
                 .map(licenca -> new SaldoResponse(licenca.getSaldoSms(), licenca.getTipoPlano()))
                 .orElseThrow(() -> new RegraNegocioException("Licença não encontrada."));
     }
