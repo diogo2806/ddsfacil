@@ -35,8 +35,15 @@ export function useConteudos(options: UseConteudosOptions = {}) {
   });
 
   const mutacaoCriarComArquivo = useMutation({
-    mutationFn: (form: { dados: CadastroConteudo; arquivo: File }) =>
-      criarConteudoComArquivo({ ...form.dados, arquivo: form.arquivo }),
+    mutationFn: (form: {
+      dados: CadastroConteudo;
+      arquivo: File;
+      aoProgredir?: (progresso: number) => void;
+    }) =>
+      criarConteudoComArquivo(
+        { ...form.dados, arquivo: form.arquivo },
+        { onUploadProgress: form.aoProgredir },
+      ),
     onSuccess: () => {
       clienteConsulta.invalidateQueries({ queryKey: ['conteudos'] });
       options.onSuccessSave?.();
