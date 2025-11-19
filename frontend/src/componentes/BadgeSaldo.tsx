@@ -16,7 +16,6 @@ export default function BadgeSaldo() {
     retry: 1, // Tenta apenas mais uma vez em caso de falha, para não inundar o log
   });
 
-  // Se ainda não tem empresaId (login não finalizou), não exibe nada
   if (!empresaId) {
     return null;
   }
