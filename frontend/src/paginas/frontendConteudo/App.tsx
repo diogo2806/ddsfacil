@@ -132,7 +132,7 @@ export default function App() {
           </div>
           <div className="flex items-center gap-3">
             <div className="hidden sm:block">
-              <BadgeSaldo />
+              <BadgeSaldo sessaoUsuario={sessaoUsuario} />
             </div>
             <span className="hidden text-gray-700 sm:inline">Olá, {nomeUsuarioLogado}</span>
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-700">
