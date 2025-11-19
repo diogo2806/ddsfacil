@@ -10,6 +10,7 @@ import java.util.stream.Stream;
 public enum StatusEnvioDds {
     PENDENTE("Pendente"),
     ENVIADO("Enviado"),
+    FALHA("Falha"),
     CONFIRMADO("Confirmado");
 
     private static final Map<String, StatusEnvioDds> NOME_PARA_ENUM_MAP =

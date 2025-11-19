@@ -62,16 +62,20 @@ public class EnvioSmsProcessadorDeJobs {
             String numeroDestino = sanitizarNumero(envio.getFuncionarioEntity().getCelular());
             if (!StringUtils.hasText(numeroDestino)) {
                 LOGGER.warn("Número de telefone inválido para o funcionário {}.", envio.getFuncionarioEntity().getId());
+                envio.registrarFalhaEntrega("Número de celular inválido para envio de SMS.");
+                envioRepositorio.save(envio);
                 return;
             }
             String titulo = Jsoup.clean(envio.getConteudo().getTitulo(), Safelist.none()).strip();
             String linkConfirmacao = urlBase + envio.getTokenAcesso();
             String mensagem = "DDS: " + titulo + ". Leia e confirme: " + linkConfirmacao;
-            servicoSms.enviarMensagem(numeroDestino, mensagem);
+            servicoSms.enviarMensagem(numeroDestino, mensagem, envio.getId());
             envio.marcarComoEnviado(LocalDateTime.now());
             envioRepositorio.save(envio);
             LOGGER.info("SMS enviado para o envio {}.", envio.getId());
         } catch (Exception ex) {
+            envio.registrarFalhaEntrega("Erro no envio do SMS: " + ex.getMessage());
+            envioRepositorio.save(envio);
             LOGGER.error("Erro ao enviar SMS para o envio {}.", envio.getId(), ex);
         }
     }

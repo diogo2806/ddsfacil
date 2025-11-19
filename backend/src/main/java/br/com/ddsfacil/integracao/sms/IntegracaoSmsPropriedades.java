@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 @ConfigurationProperties(prefix = "integracao.sms")
@@ -17,6 +18,7 @@ public class IntegracaoSmsPropriedades {
     private String tokenAutenticacao;
     private String numeroOrigem;
     private String urlBaseConfirmacao;
+    private String urlStatusWebhook;
 
     public boolean credenciaisCompletas() {
         return naoVazio(contaSid) && naoVazio(tokenAutenticacao) && naoVazio(numeroOrigem);
@@ -24,6 +26,21 @@ public class IntegracaoSmsPropriedades {
 
     public boolean urlConfirmacaoValida() {
         return naoVazio(urlBaseConfirmacao);
+    }
+
+    public boolean urlWebhookValida() {
+        return naoVazio(urlStatusWebhook);
+    }
+
+    public String montarUrlStatusCallback(Long envioId) {
+        if (!urlWebhookValida() || envioId == null) {
+            return null;
+        }
+        return UriComponentsBuilder
+                .fromUriString(urlStatusWebhook)
+                .replaceQueryParam("envioId", envioId)
+                .build()
+                .toUriString();
     }
 
     private boolean naoVazio(String valor) {
