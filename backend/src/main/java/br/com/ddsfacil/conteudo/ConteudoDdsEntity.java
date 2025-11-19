@@ -8,15 +8,18 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Filter;
 
 @Entity
-@Table(name = "conteudos_dds")
+@Table(name = "conteudos_dds", indexes = @Index(name = "idx_conteudos_dds_empresa_id", columnList = "empresa_id"))
+@Filter(name = "filtroEmpresa", condition = "empresa_id = :empresaId")
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -49,8 +52,11 @@ public class ConteudoDdsEntity {
     @Column(name = "arquivo_dados", columnDefinition = "bytea")
     private byte[] arquivoDados;
 
+    @Column(name = "empresa_id", nullable = false)
+    private Long empresaId;
+
     // Construtor mantido para compatibilidade com o AllArgsConstructor gerado
-    public ConteudoDdsEntity(String titulo, String descricao, TipoConteudo tipo, String url, String arquivoNome, String arquivoPath, byte[] arquivoDados) {
+    public ConteudoDdsEntity(String titulo, String descricao, TipoConteudo tipo, String url, String arquivoNome, String arquivoPath, byte[] arquivoDados, Long empresaId) {
         this.titulo = titulo;
         this.descricao = descricao;
         this.tipo = tipo;
@@ -58,5 +64,6 @@ public class ConteudoDdsEntity {
         this.arquivoNome = arquivoNome;
         this.arquivoPath = arquivoPath;
         this.arquivoDados = arquivoDados;
+        this.empresaId = empresaId;
     }
 }

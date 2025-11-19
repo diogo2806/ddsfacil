@@ -11,6 +11,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
@@ -23,9 +24,11 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.hibernate.annotations.Filter;
 
 @Entity
-@Table(name = "envios_dds")
+@Table(name = "envios_dds", indexes = @Index(name = "idx_envios_dds_empresa_id", columnList = "empresa_id"))
+@Filter(name = "filtroEmpresa", condition = "empresa_id = :empresaId")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class EnvioDdsEntity {
@@ -62,13 +65,23 @@ public class EnvioDdsEntity {
     @Column(name = "token_acesso", nullable = false, unique = true, length = 64)
     private String tokenAcesso;
 
-    public EnvioDdsEntity(FuncionarioEntity funcionarioEntity, ConteudoDdsEntity conteudo, LocalDate dataEnvio, LocalDateTime momentoEnvio) {
+    @Column(name = "empresa_id", nullable = false)
+    private Long empresaId;
+
+    public EnvioDdsEntity(
+            FuncionarioEntity funcionarioEntity,
+            ConteudoDdsEntity conteudo,
+            LocalDate dataEnvio,
+            LocalDateTime momentoEnvio,
+            Long empresaId
+    ) {
         this.funcionarioEntity = funcionarioEntity;
         this.conteudo = conteudo;
         this.dataEnvio = dataEnvio;
         this.momentoEnvio = momentoEnvio;
         this.status = StatusEnvioDds.PENDENTE;
         this.tokenAcesso = gerarToken();
+        this.empresaId = empresaId;
     }
 
     public void confirmar(LocalDateTime momento) {

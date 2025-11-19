@@ -1,6 +1,7 @@
 // Arquivo: backend/src/main/java/br/com/ddsfacil/local/LocalTrabalhoService.java
 package br.com.ddsfacil.local;
 
+import br.com.ddsfacil.configuracao.multitenant.ContextoEmpresa;
 import br.com.ddsfacil.excecao.RecursoNaoEncontradoException;
 import br.com.ddsfacil.local.dto.LocalTrabalhoRequest;
 import br.com.ddsfacil.local.dto.LocalTrabalhoResponse;
@@ -29,7 +30,8 @@ public class LocalTrabalhoService {
         Objects.requireNonNull(request, "Requisição não pode ser nula.");
         TipoLocal tipoLocal = tipoLocalRepository.findById(request.getTipoLocalId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Tipo de local não encontrado."));
-        LocalTrabalho local = new LocalTrabalho(request.getNome(), tipoLocal);
+        Long empresaId = ContextoEmpresa.obterEmpresaIdObrigatorio();
+        LocalTrabalho local = new LocalTrabalho(request.getNome(), tipoLocal, empresaId);
         LocalTrabalho salvo = localTrabalhoRepository.save(local);
         return new LocalTrabalhoResponse(salvo);
     }

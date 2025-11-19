@@ -1,9 +1,10 @@
 // Arquivo: backend/src/main/java/br/com/ddsfacil/conteudo/ConteudoDdsService.java
 package br.com.ddsfacil.conteudo;
 
+import br.com.ddsfacil.configuracao.multitenant.ContextoEmpresa;
+import br.com.ddsfacil.conteudo.dto.ConteudoDdsArquivoResponse;
 import br.com.ddsfacil.conteudo.dto.ConteudoDdsRequest;
 import br.com.ddsfacil.conteudo.dto.ConteudoDdsResponse;
-import br.com.ddsfacil.conteudo.dto.ConteudoDdsArquivoResponse;
 import br.com.ddsfacil.excecao.RecursoNaoEncontradoException;
 import java.util.List;
 import java.util.Objects;
@@ -66,8 +67,18 @@ public class ConteudoDdsService {
         }
 
         log.info("Criando novo conteúdo. Título: {}, Tipo: {}", tituloLimpo, tipoEnum);
+        Long empresaId = ContextoEmpresa.obterEmpresaIdObrigatorio();
 
-        ConteudoDdsEntity conteudo = new ConteudoDdsEntity(tituloLimpo, descricaoLimpa, tipoEnum, url, arquivoNome, null, arquivoDados);
+        ConteudoDdsEntity conteudo = new ConteudoDdsEntity(
+                tituloLimpo,
+                descricaoLimpa,
+                tipoEnum,
+                url,
+                arquivoNome,
+                null,
+                arquivoDados,
+                empresaId
+        );
         ConteudoDdsEntity salvo = conteudoRepositorio.save(conteudo);
         log.info("Conteúdo criado com ID: {}", salvo.getId());
         return mapearParaResposta(salvo);

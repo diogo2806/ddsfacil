@@ -1,6 +1,7 @@
 // Arquivo: backend/src/main/java/br/com/ddsfacil/funcionario/FuncionarioService.java
 package br.com.ddsfacil.funcionario;
 
+import br.com.ddsfacil.configuracao.multitenant.ContextoEmpresa;
 import br.com.ddsfacil.excecao.RecursoNaoEncontradoException;
 import br.com.ddsfacil.funcionario.dto.FuncionarioRequest;
 import br.com.ddsfacil.funcionario.dto.FuncionarioResponse;
@@ -35,9 +36,10 @@ public class FuncionarioService {
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Local de trabalho não encontrado."));
         String nomeLimpo = sanitizarTexto(requisicao.getNome());
         String celularLimpo = sanitizarCelular(requisicao.getCelular());
+        Long empresaId = ContextoEmpresa.obterEmpresaIdObrigatorio();
 
         log.info("Criando novo funcionário. Nome: {}, Local: {}", nomeLimpo, local.getNome());
-        FuncionarioEntity funcionarioEntity = new FuncionarioEntity(nomeLimpo, celularLimpo, local);
+        FuncionarioEntity funcionarioEntity = new FuncionarioEntity(nomeLimpo, celularLimpo, local, empresaId);
         FuncionarioEntity salvo = funcionarioRepository.save(funcionarioEntity);
 
         log.info("Funcionário criado com ID: {}. (LGPD: Dados Pessoais envolvidos)", salvo.getId());
