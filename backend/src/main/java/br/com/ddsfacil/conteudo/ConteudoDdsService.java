@@ -1,11 +1,12 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/conteudo/ConteudoDdsService.java
 package br.com.ddsfacil.conteudo;
 
 import br.com.ddsfacil.configuracao.multitenant.ContextoEmpresa;
 import br.com.ddsfacil.conteudo.dto.ConteudoDdsArquivoResponse;
 import br.com.ddsfacil.conteudo.dto.ConteudoDdsRequest;
 import br.com.ddsfacil.conteudo.dto.ConteudoDdsResponse;
+import br.com.ddsfacil.envio.EnvioDdsRepository; // <--- IMPORTAR
 import br.com.ddsfacil.excecao.RecursoNaoEncontradoException;
+import br.com.ddsfacil.excecao.RegraNegocioException; // <--- IMPORTAR
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -24,20 +25,23 @@ import org.springframework.web.multipart.MultipartFile;
 public class ConteudoDdsService {
 
     private static final Logger log = LoggerFactory.getLogger(ConteudoDdsService.class);
+    
     private final ConteudoDdsRepository conteudoRepositorio;
+    private final EnvioDdsRepository envioRepositorio; // <--- ADICIONAR DEPENDENCIA
 
-    public ConteudoDdsService(ConteudoDdsRepository conteudoRepositorio) {
+    // ATUALIZAR CONSTRUTOR
+    public ConteudoDdsService(ConteudoDdsRepository conteudoRepositorio, EnvioDdsRepository envioRepositorio) {
         this.conteudoRepositorio = conteudoRepositorio;
+        this.envioRepositorio = envioRepositorio;
     }
 
     @Transactional
     public ConteudoDdsResponse criar(ConteudoDdsRequest requisicao) {
+        // ... (código existente mantido igual) ...
         Objects.requireNonNull(requisicao, "Requisição não pode ser nula.");
-
         String tituloLimpo = sanitizarTextoCurto(requisicao.getTitulo());
         String descricaoLimpa = sanitizarTextoLongo(requisicao.getDescricao());
 
-        // Converte a String do DTO para o Enum
         String tipoString = requisicao.getTipo() == null ? "TEXTO" : requisicao.getTipo();
         TipoConteudo tipoEnum = TipoConteudo.fromString(tipoString);
 
@@ -93,6 +97,7 @@ public class ConteudoDdsService {
 
     @Transactional(readOnly = true)
     public ConteudoDdsArquivoResponse buscarArquivo(Long id) {
+         // ... (código existente mantido igual) ...
         ConteudoDdsEntity conteudo = conteudoRepositorio
                 .findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Conteúdo não encontrado."));
@@ -110,17 +115,25 @@ public class ConteudoDdsService {
         MediaType tipoMidia = MediaTypeFactory
                 .getMediaType(nomeArquivo)
                 .orElse(MediaType.APPLICATION_OCTET_STREAM);
-
         return new ConteudoDdsArquivoResponse(nomeArquivo, tipoMidia, dadosArquivo);
     }
 
     @Transactional
     public void remover(Long id) {
         log.info("Tentando remover conteúdo ID: {}", id);
+        
         if (!conteudoRepositorio.existsById(id)) {
             log.warn("Conteúdo ID: {} não encontrado para remoção.", id);
             throw new RecursoNaoEncontradoException("Conteúdo não encontrado.");
         }
+
+        // --- NOVA VALIDAÇÃO ---
+        if (envioRepositorio.existsByConteudoId(id)) {
+            log.warn("Tentativa de remover conteúdo ID: {} que possui envios vinculados.", id);
+            throw new RegraNegocioException("Não é possível excluir este conteúdo pois ele já foi enviado para funcionários. Para manter o histórico de segurança, o conteúdo não pode ser apagado.");
+        }
+        // ----------------------
+
         conteudoRepositorio.deleteById(id);
         log.info("Conteúdo ID: {} removido com sucesso.", id);
     }
@@ -130,13 +143,14 @@ public class ConteudoDdsService {
                 conteudo.getId(),
                 conteudo.getTitulo(),
                 conteudo.getDescricao(),
-                conteudo.getTipo().getDescricao(), // Retorna a descrição do Enum
+                conteudo.getTipo().getDescricao(),
                 conteudo.getUrl(),
                 conteudo.getArquivoNome(),
                 conteudo.getArquivoDados()
         );
     }
-
+    
+    // ... (métodos privados auxiliares mantidos iguais) ...
     private String sanitizarTextoCurto(String texto) {
         return Jsoup.clean(texto, Safelist.none());
     }

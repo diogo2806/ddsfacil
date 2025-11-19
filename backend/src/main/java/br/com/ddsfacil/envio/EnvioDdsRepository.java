@@ -1,4 +1,3 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/envio/EnvioDdsRepository.java
 package br.com.ddsfacil.envio;
 
 import br.com.ddsfacil.envio.StatusEnvioDds;
@@ -30,7 +29,6 @@ public interface EnvioDdsRepository extends JpaRepository<EnvioDdsEntity, Long> 
             @Param("localTrabalhoId") Long localTrabalhoId
     );
 
-    // CORREÇÃO: Renomear de 'FuncionarioId' para 'FuncionarioEntityId'
     Optional<EnvioDdsEntity> findByDataEnvioAndFuncionarioEntityIdAndConteudoId(
             LocalDate dataEnvio,
             Long funcionarioId,
@@ -38,4 +36,7 @@ public interface EnvioDdsRepository extends JpaRepository<EnvioDdsEntity, Long> 
     );
 
     Optional<EnvioDdsEntity> findByTokenAcesso(String tokenAcesso);
+
+    // --- ADICIONAR ESTE MÉTODO ---
+    boolean existsByConteudoId(Long conteudoId);
 }
