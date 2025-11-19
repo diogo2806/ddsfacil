@@ -1,21 +1,22 @@
 import { useQuery } from '@tanstack/react-query';
 import { consultarSaldo } from '../servicos/licencaServico';
-import { obterEmpresaIdAtualOpcional } from '../configuracao/empresa'; 
+import { obterEmpresaIdAtualOpcional } from '../configuracao/empresa';
 
 export default function BadgeSaldo() {
-  // 1. Recuperamos o ID da empresa atual da configuração local
+  // Recupera o ID da empresa (agora vindo corretamente da sessão)
   const empresaId = obterEmpresaIdAtualOpcional();
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['saldo-sms'],
     queryFn: consultarSaldo,
     refetchOnWindowFocus: false,
-    // 2. A query só será executada se existir um ID de empresa definido.
-    // Isso evita a "Race Condition" onde o componente monta antes da autenticação terminar.
-    enabled: !!empresaId, 
-    retry: 1, // Tenta apenas mais uma vez em caso de falha, para não inundar o log
+    // A query só executa se tivermos um empresaId válido.
+    // Isso evita o erro 403 ao tentar buscar saldo sem estar logado.
+    enabled: !!empresaId && empresaId > 0,
+    retry: 1,
   });
 
+  // Se não estiver logado (sem empresa), não mostra nada
   if (!empresaId) {
     return null;
   }
@@ -30,11 +31,9 @@ export default function BadgeSaldo() {
   }
 
   if (isError || !data) {
-    // Em caso de erro (ex: 403 real), esconde o componente para não quebrar o layout
     return null;
   }
 
-  // Lógica visual: Azul se tiver saldo confortável, Vermelho pulsante se estiver acabando (< 10)
   const corBadge = data.saldoSms > 10 
     ? 'bg-blue-50 text-blue-700 border-blue-200' 
     : 'bg-red-50 text-red-700 border-red-200 animate-pulse';
