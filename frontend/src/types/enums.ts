@@ -3,6 +3,7 @@
 
 export enum TelaApp {
   DIVULGACAO = 'DIVULGACAO',
+  AUTENTICACAO = 'AUTENTICACAO',
   PAINEL = 'PAINEL',
 }
 
