@@ -49,6 +49,7 @@ public class ConfirmacaoPublicaController {
 
         return ResponseEntity
             .ok()
+            .contentLength(arquivo.getDados().length) // <--- ADICIONE ESTA LINHA
             .contentType(arquivo.getTipoMidia())
             .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + arquivo.getNomeArquivo() + "\"")
             .body(recurso);
