@@ -28,7 +28,14 @@ export async function criarConteudo(dados: CadastroConteudo): Promise<ConteudoDd
   return resposta.data;
 }
 
-export async function criarConteudoComArquivo(dados: CadastroConteudo): Promise<ConteudoDds> {
+type OpcoesUploadConteudo = {
+  onUploadProgress?: (percentual: number) => void;
+};
+
+export async function criarConteudoComArquivo(
+  dados: CadastroConteudo,
+  opcoes?: OpcoesUploadConteudo,
+): Promise<ConteudoDds> {
   const form = new FormData();
   form.append('titulo', dados.titulo);
   form.append('descricao', dados.descricao ?? '');
@@ -40,6 +47,12 @@ export async function criarConteudoComArquivo(dados: CadastroConteudo): Promise<
   // CORREÇÃO: Adicionado o prefixo /api/
   const resposta = await clienteHttp.post<ConteudoDds>('/api/conteudos/upload', form, {
     headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress: (evento) => {
+      if (typeof evento.total === 'number' && evento.total > 0) {
+        const percentual = Math.round((evento.loaded * 100) / evento.total);
+        opcoes?.onUploadProgress?.(percentual);
+      }
+    },
   });
   return resposta.data;
 }
