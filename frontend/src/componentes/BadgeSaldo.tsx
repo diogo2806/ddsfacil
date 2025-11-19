@@ -1,23 +1,27 @@
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { consultarSaldo } from '../servicos/licencaServico';
-import { obterEmpresaIdAtualOpcional } from '../configuracao/empresa';
+import type { SessaoUsuario } from '../types/autenticacao';
 
-export default function BadgeSaldo() {
-  // Recupera o ID da empresa (agora vindo corretamente da sessão)
-  const empresaId = obterEmpresaIdAtualOpcional();
+type BadgeSaldoProps = {
+  sessaoUsuario: SessaoUsuario | null;
+};
+
+export default function BadgeSaldo({ sessaoUsuario }: BadgeSaldoProps) {
+  const empresaId = sessaoUsuario?.empresaId ?? null;
+  const possuiTokenValido = Boolean(sessaoUsuario?.token);
+
+  const deveConsultarSaldo = useMemo(() => Boolean(possuiTokenValido && empresaId && empresaId > 0), [empresaId, possuiTokenValido]);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['saldo-sms'],
+    queryKey: ['saldo-sms', empresaId],
     queryFn: consultarSaldo,
     refetchOnWindowFocus: false,
-    // A query só executa se tivermos um empresaId válido.
-    // Isso evita o erro 403 ao tentar buscar saldo sem estar logado.
-    enabled: !!empresaId && empresaId > 0,
+    enabled: deveConsultarSaldo,
     retry: 1,
   });
 
-  // Se não estiver logado (sem empresa), não mostra nada
-  if (!empresaId) {
+  if (!deveConsultarSaldo) {
     return null;
   }
 
@@ -31,7 +35,11 @@ export default function BadgeSaldo() {
   }
 
   if (isError || !data) {
-    return null;
+    return (
+      <div className="flex items-center gap-2 rounded-full border border-yellow-200 bg-yellow-50 px-3 py-1 text-xs font-medium text-yellow-800">
+        Erro ao carregar saldo
+      </div>
+    );
   }
 
   const corBadge = data.saldoSms > 10 
