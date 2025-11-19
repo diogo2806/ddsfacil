@@ -65,6 +65,7 @@ export default function AbaDashboard() {
                 <th className="px-4 py-3">Conteúdo</th>
                 <th className="px-4 py-3">Data</th>
                 <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">Detalhes</th> {/* Nova Coluna */}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 bg-white text-sm text-gray-700">
@@ -76,12 +77,40 @@ export default function AbaDashboard() {
                 </tr>
               ) : (
                 enviosRecentes.map((envio) => (
-                  <tr key={envio.id}>
+                  <tr key={envio.id} className={envio.status === StatusEnvio.FALHA ? 'bg-red-50' : ''}>
                     <td className="px-4 py-3">{envio.nomeFuncionario}</td>
                     <td className="px-4 py-3">{envio.tituloConteudo}</td>
                     <td className="px-4 py-3">{new Date(`${envio.dataEnvio}T${envio.momentoEnvio}`).toLocaleString('pt-BR')}</td>
                     <td className="px-4 py-3">
                       <StatusBadge status={envio.status} />
+                    </td>
+                    {/* Nova Célula de Detalhes */}
+                    <td className="px-4 py-3">
+                        {envio.status === StatusEnvio.FALHA && (
+                            <div className="group relative flex items-center">
+                                <svg 
+                                    xmlns="http://www.w3.org/2000/svg" 
+                                    viewBox="0 0 24 24" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    strokeWidth="2" 
+                                    strokeLinecap="round" 
+                                    strokeLinejoin="round" 
+                                    className="h-5 w-5 text-red-600 cursor-help"
+                                >
+                                    <circle cx="12" cy="12" r="10" />
+                                    <line x1="12" y1="8" x2="12" y2="12" />
+                                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                                </svg>
+                                {/* Tooltip simples (ou use title no SVG) */}
+                                <span className="absolute bottom-full right-0 mb-2 hidden w-64 rounded bg-gray-800 p-2 text-xs text-white shadow-lg group-hover:block z-50">
+                                    {envio.mensagemErroEntrega || 'Erro desconhecido na entrega.'}
+                                </span>
+                            </div>
+                        )}
+                        {envio.status === StatusEnvio.CONFIRMADO && (
+                           <span className="text-xs text-green-600">Entregue e lido</span> 
+                        )}
                     </td>
                   </tr>
                 ))
@@ -127,6 +156,7 @@ function StatusBadge({ status }: StatusBadgeProps) {
     [StatusEnvio.CONFIRMADO]: 'bg-green-100 text-green-700 border border-green-200',
     [StatusEnvio.ENVIADO]: 'bg-blue-100 text-blue-700 border border-blue-200',
     [StatusEnvio.PENDENTE]: 'bg-yellow-100 text-yellow-800 border border-yellow-200',
+    [StatusEnvio.FALHA]: 'bg-red-100 text-red-800 border border-red-200', // <--- ADICIONADO
   }[status] ?? 'bg-gray-100 text-gray-600 border border-gray-200';
 
   return <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${cores}`}>{status}</span>;

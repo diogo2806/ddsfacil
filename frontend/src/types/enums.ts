@@ -25,6 +25,7 @@ export enum StatusEnvio {
   PENDENTE = 'Pendente',
   ENVIADO = 'Enviado',
   CONFIRMADO = 'Confirmado',
+  FALHA = 'Falha', 
 }
 
 export enum AbaAdmin {

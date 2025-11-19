@@ -26,6 +26,7 @@ import AbaConteudos from './abas/AbaConteudos';
 // [NOVOS IMPORTS]
 import AbaTiposLocal from './abas/AbaTiposLocal';
 import AbaLocais from './abas/AbaLocais';
+import BadgeSaldo from '../../componentes/BadgeSaldo'; // Importe o componente
 
 type Notificacao = {
   tipo: TipoNotificacao;
@@ -130,6 +131,9 @@ export default function App() {
             <span className="ml-2 hidden text-sm font-normal text-gray-500 md:inline">Painel de Controle</span>
           </div>
           <div className="flex items-center gap-3">
+            <div className="hidden sm:block">
+              <BadgeSaldo />
+            </div>
             <span className="hidden text-gray-700 sm:inline">Olá, {nomeUsuarioLogado}</span>
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-700">
               {obterIniciaisUsuario(nomeUsuarioLogado)}

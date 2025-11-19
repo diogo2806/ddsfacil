@@ -1,6 +1,8 @@
 package br.com.ddsfacil.licenca;
 
 import br.com.ddsfacil.excecao.RegraNegocioException;
+import br.com.ddsfacil.licenca.dto.SaldoResponse;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -22,5 +24,12 @@ public class LicencaService {
                 .orElseThrow(() -> new RegraNegocioException("Licença não encontrada para a empresa informada."));
         licenca.consumirSaldoSms(quantidade);
         LOGGER.info("Saldo de SMS da empresa {} debitado em {} crédito(s).", empresaId, quantidade);
+    }
+
+    @Transactional(readOnly = true)
+    public SaldoResponse consultarSaldo(Long empresaId) {
+        return licencaRepository.buscarPorEmpresaIdParaAtualizacao(empresaId) // Pode reusar ou criar um findByEmpresaId simples
+                .map(licenca -> new SaldoResponse(licenca.getSaldoSms(), licenca.getTipoPlano()))
+                .orElseThrow(() -> new RegraNegocioException("Licença não encontrada."));
     }
 }

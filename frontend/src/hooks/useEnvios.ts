@@ -20,6 +20,7 @@ export function useEnvios(options: UseEnviosOptions = {}) {
     mutationFn: (dados: CadastroEnvio) => criarEnvios(dados),
     onSuccess: () => {
       clienteConsulta.invalidateQueries({ queryKey: ['envios'] });
+      clienteConsulta.invalidateQueries({ queryKey: ['saldo-sms'] }); // <--- LINHA ADICIONADA
       options.onSuccessSave?.();
     },
     onError: () => options.onErrorSave?.(),
