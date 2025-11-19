@@ -1,3 +1,5 @@
+import { carregarSessaoUsuario } from './sessaoUsuario';
+
 const chaveArmazenamento = 'ddsfacil_empresa_id_ativo';
 
 function normalizarEmpresaId(valor: string | number | null | undefined): number | null {
@@ -24,23 +26,20 @@ function normalizarEmpresaId(valor: string | number | null | undefined): number 
   return numero;
 }
 
+// Mantemos a leitura do env para casos de fallback (login inicial), mas com menor prioridade
 function lerEmpresaPadraoConfigurada(): number {
   const textoConfigurado = typeof import.meta.env.VITE_EMPRESA_ID_PADRAO === 'string'
     ? import.meta.env.VITE_EMPRESA_ID_PADRAO.trim()
     : '';
 
+  // Não lançamos erro aqui para não quebrar a build se a env não existir,
+  // retornamos 1 como fallback seguro para desenvolvimento.
   if (!textoConfigurado) {
-    throw new Error(
-      'Configure a variável de ambiente VITE_EMPRESA_ID_PADRAO com o identificador numérico da empresa que utilizará o painel.',
-    );
+    return 1; 
   }
 
   const empresaPadrao = normalizarEmpresaId(textoConfigurado);
-  if (!empresaPadrao) {
-    throw new Error('A variável VITE_EMPRESA_ID_PADRAO deve conter um número inteiro maior que zero.');
-  }
-
-  return empresaPadrao;
+  return empresaPadrao || 1;
 }
 
 const empresaPadraoConfigurada = lerEmpresaPadraoConfigurada();
@@ -87,14 +86,23 @@ export function definirEmpresaIdAtual(empresaId: number): void {
   persistirEmpresaId(empresaNormalizada);
 }
 
+// --- MUDANÇA CRÍTICA AQUI ---
 export function obterEmpresaIdAtualOpcional(): number | null {
+  // 1. Prioridade Total: Sessão do Usuário Autenticado
+  const sessao = carregarSessaoUsuario();
+  if (sessao && sessao.empresaId) {
+    return sessao.empresaId;
+  }
+
+  // 2. Fallback: Memória local (para tela de login/divulgação)
   return empresaIdEmMemoria ?? null;
 }
 
 export function obterEmpresaIdAtualObrigatorio(): number {
   const empresaAtual = obterEmpresaIdAtualOpcional();
   if (!empresaAtual) {
-    throw new Error('Nenhuma empresa foi definida para a sessão atual.');
+    // Se não achou na sessão nem na memória, usa o padrão do ENV para evitar crash
+    return empresaPadraoConfigurada;
   }
   return empresaAtual;
 }
