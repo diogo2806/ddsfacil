@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { consultarSaldo } from '../servicos/licencaServico';
-import { obterEmpresaIdAtualOpcional } from '../configuracao/empresa'; [cite_start]// [cite: 1641]
+import { obterEmpresaIdAtualOpcional } from '../configuracao/empresa'; 
 
 export default function BadgeSaldo() {
   // 1. Recuperamos o ID da empresa atual da configuração local
