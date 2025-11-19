@@ -2,6 +2,7 @@ import axios from 'axios';
 import { URL_BASE_API } from '../configuracao/api';
 import { carregarSessaoUsuario } from '../configuracao/sessaoUsuario';
 import { sanitizarTokenJwt } from '../utils/validador';
+import { extrairEmpresaIdDoToken } from '../utils/tokenJwt';
 
 export const clienteHttp = axios.create({
   baseURL: URL_BASE_API,
@@ -24,10 +25,19 @@ clienteHttp.interceptors.request.use((config) => {
       config.headers.Authorization = `Bearer ${tokenSanitizado}`;
     }
 
-    // 2. Injeta o ID da Empresa vinculado a este usuário/sessão
-    // Isso previne o erro 403 onde o header não bate com o token
-    if (sessao.empresaId) {
-      config.headers['X-Empresa-Id'] = String(sessao.empresaId);
+    // 2. Garante que o cabeçalho da empresa sempre corresponda ao token
+    const empresaToken = extrairEmpresaIdDoToken(tokenSanitizado);
+    const empresaSessao = Number(sessao.empresaId);
+    const empresaCabecalho = Number.isFinite(empresaToken)
+      ? empresaToken
+      : Number.isFinite(empresaSessao) && empresaSessao > 0
+        ? empresaSessao
+        : null;
+
+    if (empresaCabecalho) {
+      config.headers['X-Empresa-Id'] = String(empresaCabecalho);
+    } else {
+      delete config.headers['X-Empresa-Id'];
     }
   }
 
