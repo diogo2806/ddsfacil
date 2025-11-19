@@ -61,7 +61,7 @@ export default function PaginaConfirmacaoTrabalhador() {
   const urlSegura = sanitizarUrl(urlConteudo);
   const nomeArquivoSeguro = sanitizarNomeArquivo(nomeArquivo);
   const confirmacaoConcluida = mutacaoConfirmacao.isSuccess;
-  const tipoArquivo = identificarTipoArquivo(urlSegura);
+  const tipoArquivo = identificarTipoArquivo(nomeArquivoSeguro);
 
   return (
     <LayoutPagina>
