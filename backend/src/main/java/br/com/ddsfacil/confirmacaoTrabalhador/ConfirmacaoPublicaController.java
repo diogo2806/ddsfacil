@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDateTime;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
@@ -49,7 +50,10 @@ public class ConfirmacaoPublicaController {
 
         return ResponseEntity
             .ok()
-            .contentLength(arquivo.getDados().length) // <--- ADICIONE ESTA LINHA
+            // 1. Desabilita o Cache para forçar o download novo
+            .cacheControl(CacheControl.noCache().mustRevalidate()) 
+            // 2. Informa o tamanho exato (Corrige o erro de renderização do PDF)
+            .contentLength(arquivo.getDados().length) 
             .contentType(arquivo.getTipoMidia())
             .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + arquivo.getNomeArquivo() + "\"")
             .body(recurso);

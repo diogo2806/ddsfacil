@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -63,6 +64,10 @@ public class ConteudoDdsController {
         ByteArrayResource recurso = new ByteArrayResource(arquivo.getDados());
 
         return ResponseEntity.ok()
+                // Força o navegador a baixar novamente
+                .cacheControl(CacheControl.noCache().mustRevalidate())
+                // Define o tamanho para o navegador saber quando o download termina
+                .contentLength(arquivo.getDados().length)
                 .contentType(arquivo.getTipoMidia())
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + arquivo.getNomeArquivo() + "\"")
                 .body(recurso);
