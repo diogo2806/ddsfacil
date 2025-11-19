@@ -5,6 +5,10 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import App from './paginas/frontendConteudo/App';
 import PaginaConfirmacaoTrabalhador from './paginas/confirmacaoTrabalhador/PaginaConfirmacaoTrabalhador';
 import './styles.css';
+import { obterEmpresaIdAtualObrigatorio, sincronizarEmpresaIdDaUrl } from './configuracao/empresa';
+
+sincronizarEmpresaIdDaUrl();
+obterEmpresaIdAtualObrigatorio();
 
 const clienteConsulta = new QueryClient();
 
