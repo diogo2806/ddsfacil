@@ -1,6 +1,6 @@
 package br.com.ddsfacil.integracao.sms;
 
-import br.com.ddsfacil.envio.EnvioDdsRepository;
+import br.com.ddsfacil.envio.infrastructure.EnvioDdsRepository;
 import br.com.ddsfacil.integracao.sms.dto.WebhookSmsRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

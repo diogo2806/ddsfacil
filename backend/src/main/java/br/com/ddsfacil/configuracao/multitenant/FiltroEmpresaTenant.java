@@ -7,7 +7,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import br.com.ddsfacil.seguranca.UsuarioAutenticado;
+import br.com.ddsfacil.seguranca.infrastructure.UsuarioAutenticado;
 import org.hibernate.Filter;
 import org.hibernate.Session;
 import org.slf4j.Logger;
