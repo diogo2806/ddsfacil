@@ -1,12 +1,14 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/local/LocalTrabalhoService.java
-package br.com.ddsfacil.local;
+// Arquivo: backend/src/main/java/br/com/ddsfacil/local/application/LocalTrabalhoService.java
+package br.com.ddsfacil.local.application;
 
 import br.com.ddsfacil.configuracao.multitenant.ContextoEmpresa;
 import br.com.ddsfacil.excecao.RecursoNaoEncontradoException;
-import br.com.ddsfacil.local.dto.LocalTrabalhoRequest;
-import br.com.ddsfacil.local.dto.LocalTrabalhoResponse;
-import br.com.ddsfacil.local.tipoLocal.TipoLocal;
-import br.com.ddsfacil.local.tipoLocal.TipoLocalRepository;
+import br.com.ddsfacil.local.domain.LocalTrabalho;
+import br.com.ddsfacil.local.domain.TipoLocal;
+import br.com.ddsfacil.local.infrastructure.LocalTrabalhoRepository;
+import br.com.ddsfacil.local.infrastructure.TipoLocalRepository;
+import br.com.ddsfacil.local.infrastructure.dto.LocalTrabalhoRequest;
+import br.com.ddsfacil.local.infrastructure.dto.LocalTrabalhoResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

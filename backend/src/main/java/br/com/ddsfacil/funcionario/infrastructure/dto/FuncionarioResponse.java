@@ -1,7 +1,7 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/funcionario/dto/FuncionarioResponse.java
-package br.com.ddsfacil.funcionario.dto;
+// Arquivo: backend/src/main/java/br/com/ddsfacil/funcionario/infrastructure/dto/FuncionarioResponse.java
+package br.com.ddsfacil.funcionario.infrastructure.dto;
 
-import br.com.ddsfacil.funcionario.FuncionarioEntity;
+import br.com.ddsfacil.funcionario.domain.FuncionarioEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 

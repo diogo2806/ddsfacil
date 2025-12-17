@@ -1,11 +1,13 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/local/tipoLocal/TipoLocalService.java
-package br.com.ddsfacil.local.tipoLocal;
+// Arquivo: backend/src/main/java/br/com/ddsfacil/local/application/TipoLocalService.java
+package br.com.ddsfacil.local.application;
 
 import br.com.ddsfacil.excecao.RecursoNaoEncontradoException;
 import br.com.ddsfacil.excecao.RegraNegocioException;
-import br.com.ddsfacil.local.LocalTrabalhoRepository;
-import br.com.ddsfacil.local.tipoLocal.dto.TipoLocalRequest;
-import br.com.ddsfacil.local.tipoLocal.dto.TipoLocalResponse;
+import br.com.ddsfacil.local.domain.TipoLocal;
+import br.com.ddsfacil.local.infrastructure.LocalTrabalhoRepository;
+import br.com.ddsfacil.local.infrastructure.TipoLocalRepository;
+import br.com.ddsfacil.local.infrastructure.dto.TipoLocalRequest;
+import br.com.ddsfacil.local.infrastructure.dto.TipoLocalResponse;
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;
 import org.springframework.stereotype.Service;

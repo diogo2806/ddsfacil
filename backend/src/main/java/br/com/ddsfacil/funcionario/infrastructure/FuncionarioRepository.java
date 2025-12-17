@@ -1,6 +1,7 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/funcionario/FuncionarioRepository.java
-package br.com.ddsfacil.funcionario;
+// Arquivo: backend/src/main/java/br/com/ddsfacil/funcionario/infrastructure/FuncionarioRepository.java
+package br.com.ddsfacil.funcionario.infrastructure;
 
+import br.com.ddsfacil.funcionario.domain.FuncionarioEntity;
 import java.util.List;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;

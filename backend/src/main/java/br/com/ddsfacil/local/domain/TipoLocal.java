@@ -1,5 +1,5 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/local/tipoLocal/TipoLocal.java
-package br.com.ddsfacil.local.tipoLocal;
+// Arquivo: backend/src/main/java/br/com/ddsfacil/local/domain/TipoLocal.java
+package br.com.ddsfacil.local.domain;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;

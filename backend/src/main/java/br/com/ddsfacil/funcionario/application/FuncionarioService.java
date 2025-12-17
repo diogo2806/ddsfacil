@@ -1,12 +1,14 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/funcionario/FuncionarioService.java
-package br.com.ddsfacil.funcionario;
+// Arquivo: backend/src/main/java/br/com/ddsfacil/funcionario/application/FuncionarioService.java
+package br.com.ddsfacil.funcionario.application;
 
 import br.com.ddsfacil.configuracao.multitenant.ContextoEmpresa;
 import br.com.ddsfacil.excecao.RecursoNaoEncontradoException;
-import br.com.ddsfacil.funcionario.dto.FuncionarioRequest;
-import br.com.ddsfacil.funcionario.dto.FuncionarioResponse;
-import br.com.ddsfacil.local.LocalTrabalho;
-import br.com.ddsfacil.local.LocalTrabalhoRepository;
+import br.com.ddsfacil.funcionario.domain.FuncionarioEntity;
+import br.com.ddsfacil.funcionario.infrastructure.FuncionarioRepository;
+import br.com.ddsfacil.funcionario.infrastructure.dto.FuncionarioRequest;
+import br.com.ddsfacil.funcionario.infrastructure.dto.FuncionarioResponse;
+import br.com.ddsfacil.local.domain.LocalTrabalho;
+import br.com.ddsfacil.local.infrastructure.LocalTrabalhoRepository;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;

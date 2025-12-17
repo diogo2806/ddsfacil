@@ -1,7 +1,7 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/local/tipoLocal/dto/TipoLocalResponse.java
-package br.com.ddsfacil.local.tipoLocal.dto;
+// Arquivo: backend/src/main/java/br/com/ddsfacil/local/infrastructure/dto/TipoLocalResponse.java
+package br.com.ddsfacil.local.infrastructure.dto;
 
-import br.com.ddsfacil.local.tipoLocal.TipoLocal;
+import br.com.ddsfacil.local.domain.TipoLocal;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 

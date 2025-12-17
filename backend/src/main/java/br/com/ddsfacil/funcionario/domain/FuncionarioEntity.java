@@ -1,7 +1,7 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/local/LocalTrabalho.java
-package br.com.ddsfacil.local;
+// Arquivo: backend/src/main/java/br/com/ddsfacil/funcionario/domain/FuncionarioEntity.java
+package br.com.ddsfacil.funcionario.domain;
 
-import br.com.ddsfacil.local.tipoLocal.TipoLocal;
+import br.com.ddsfacil.local.domain.LocalTrabalho;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -13,6 +13,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.NamedAttributeNode;
 import jakarta.persistence.NamedEntityGraph;
+import jakarta.persistence.NamedSubgraph;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -23,23 +24,27 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.Filter;
 
-/**
- * Nova entidade para o "Local" de trabalho, conforme sua sugestão.
- * (Regra 7 e Regra 13)
- */
 @Entity
-@Table(name = "locais_trabalho", indexes = @Index(name = "idx_locais_trabalho_empresa_id", columnList = "empresa_id"))
-// [REATORADO] Adicionando EntityGraph para otimizar query (Regra 2.5)
+@Table(name = "funcionarios", indexes = @Index(name = "idx_funcionarios_empresa_id", columnList = "empresa_id"))
+// [REATORADO] Adicionando EntityGraph para otimizar queries (Regra 2.5)
 @NamedEntityGraph(
-        name = "LocalTrabalho.withTipoLocal",
-        attributeNodes = @NamedAttributeNode("tipoLocal")
+        name = "Funcionario.withLocalTrabalhoAndTipo",
+        attributeNodes = {
+                @NamedAttributeNode(value = "localTrabalho", subgraph = "localTrabalho.tipoLocal")
+        },
+        subgraphs = {
+                @NamedSubgraph(
+                        name = "localTrabalho.tipoLocal",
+                        attributeNodes = @NamedAttributeNode("tipoLocal")
+                )
+        }
 )
 @Filter(name = "filtroEmpresa", condition = "empresa_id = :empresaId")
 @Getter
 @Setter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-public class LocalTrabalho {
+public class FuncionarioEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -48,18 +53,22 @@ public class LocalTrabalho {
     @Column(name = "nome", nullable = false, length = 120)
     private String nome;
 
+    @Column(name = "celular", nullable = false, length = 20)
+    private String celular;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "tipo_local_id", nullable = false)
+    @JoinColumn(name = "local_trabalho_id", nullable = false)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    private TipoLocal tipoLocal;
+    private LocalTrabalho localTrabalho;
 
     @Column(name = "empresa_id", nullable = false)
     private Long empresaId;
 
-    public LocalTrabalho(String nome, TipoLocal tipoLocal, Long empresaId) {
+    public FuncionarioEntity(String nome, String celular, LocalTrabalho localTrabalho, Long empresaId) {
         this.nome = nome;
-        this.tipoLocal = tipoLocal;
+        this.celular = celular;
+        this.localTrabalho = localTrabalho;
         this.empresaId = empresaId;
     }
 }

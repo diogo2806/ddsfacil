@@ -1,8 +1,9 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/local/LocalTrabalhoController.java
-package br.com.ddsfacil.local;
+// Arquivo: backend/src/main/java/br/com/ddsfacil/local/api/LocalTrabalhoController.java
+package br.com.ddsfacil.local.api;
 
-import br.com.ddsfacil.local.dto.LocalTrabalhoRequest;
-import br.com.ddsfacil.local.dto.LocalTrabalhoResponse;
+import br.com.ddsfacil.local.application.LocalTrabalhoService;
+import br.com.ddsfacil.local.infrastructure.dto.LocalTrabalhoRequest;
+import br.com.ddsfacil.local.infrastructure.dto.LocalTrabalhoResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

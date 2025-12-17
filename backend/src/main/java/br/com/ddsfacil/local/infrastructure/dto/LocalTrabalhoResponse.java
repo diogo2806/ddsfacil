@@ -1,7 +1,7 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/local/dto/LocalTrabalhoResponse.java
-package br.com.ddsfacil.local.dto;
+// Arquivo: backend/src/main/java/br/com/ddsfacil/local/infrastructure/dto/LocalTrabalhoResponse.java
+package br.com.ddsfacil.local.infrastructure.dto;
 
-import br.com.ddsfacil.local.LocalTrabalho;
+import br.com.ddsfacil.local.domain.LocalTrabalho;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 

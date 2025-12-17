@@ -1,5 +1,5 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/local/dto/LocalTrabalhoRequest.java
-package br.com.ddsfacil.local.dto;
+// Arquivo: backend/src/main/java/br/com/ddsfacil/local/infrastructure/dto/LocalTrabalhoRequest.java
+package br.com.ddsfacil.local.infrastructure.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;

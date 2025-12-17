@@ -1,8 +1,9 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/local/tipoLocal/TipoLocalController.java
-package br.com.ddsfacil.local.tipoLocal;
+// Arquivo: backend/src/main/java/br/com/ddsfacil/local/api/TipoLocalController.java
+package br.com.ddsfacil.local.api;
 
-import br.com.ddsfacil.local.tipoLocal.dto.TipoLocalRequest;
-import br.com.ddsfacil.local.tipoLocal.dto.TipoLocalResponse;
+import br.com.ddsfacil.local.application.TipoLocalService;
+import br.com.ddsfacil.local.infrastructure.dto.TipoLocalRequest;
+import br.com.ddsfacil.local.infrastructure.dto.TipoLocalResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

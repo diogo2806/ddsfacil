@@ -1,8 +1,9 @@
-// Arquivo: backend/src/main/java/br/com/ddsfacil/funcionario/FuncionarioController.java
-package br.com.ddsfacil.funcionario;
+// Arquivo: backend/src/main/java/br/com/ddsfacil/funcionario/api/FuncionarioController.java
+package br.com.ddsfacil.funcionario.api;
 
-import br.com.ddsfacil.funcionario.dto.FuncionarioRequest;
-import br.com.ddsfacil.funcionario.dto.FuncionarioResponse;
+import br.com.ddsfacil.funcionario.application.FuncionarioService;
+import br.com.ddsfacil.funcionario.infrastructure.dto.FuncionarioRequest;
+import br.com.ddsfacil.funcionario.infrastructure.dto.FuncionarioResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
