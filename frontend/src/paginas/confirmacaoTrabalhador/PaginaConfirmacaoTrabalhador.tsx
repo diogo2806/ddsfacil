@@ -8,6 +8,7 @@ import {
   DadosConfirmacaoTrabalhador,
 } from '../../servicos/confirmacaoTrabalhadorServico';
 import { TipoConteudo } from '../../types/enums';
+import { resolverUrlConteudo } from '../../utils/urlConteudo';
 
 export default function PaginaConfirmacaoTrabalhador() {
   const parametros = useParams<{ token: string }>();
@@ -172,8 +173,7 @@ function sanitizarUrl(valor: string | null): string | null {
   if (!urlLimpa) {
     return null;
   }
-  const urlValida = /^https?:\/\/|^\//i;
-  return urlValida.test(urlLimpa) ? urlLimpa : null;
+  return resolverUrlConteudo(urlLimpa);
 }
 
 function sanitizarNomeArquivo(valor: string | null): string | null {
