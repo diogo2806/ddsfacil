@@ -2,6 +2,7 @@ import { ChangeEvent, FormEvent, useMemo, useState } from 'react';
 import DOMPurify from 'dompurify';
 import { useConteudos } from '../../../hooks/useConteudos';
 import { TipoConteudo, TipoNotificacao } from '../../../types/enums';
+import { resolverUrlConteudo } from '../../../utils/urlConteudo';
 
 type Props = {
   exibirNotificacao: (notificacao: { tipo: TipoNotificacao; mensagem: string }) => void;
@@ -155,6 +156,10 @@ export default function AbaConteudos({ exibirNotificacao }: Props) {
 
   const estaSalvando = mutacaoCriar.isPending || mutacaoCriarComArquivo.isPending;
   const deveExibirProgresso = progressoUpload > 0 && tipo === TipoConteudo.ARQUIVO;
+
+  function obterLinkArquivoConteudo(id: number): string | null {
+    return resolverUrlConteudo(`/api/conteudos/${id}/arquivo`);
+  }
 
   return (
     <div className="grid gap-6 md:grid-cols-[1fr,2fr]">
@@ -324,14 +329,21 @@ export default function AbaConteudos({ exibirNotificacao }: Props) {
                           Abrir link
                         </a>
                       ) : conteudo.tipo === TipoConteudo.ARQUIVO ? (
-                        <a
-                          href={`/api/conteudos/${conteudo.id}/arquivo`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-600 underline"
-                        >
-                          Baixar arquivo
-                        </a>
+                        (() => {
+                          const linkArquivo = obterLinkArquivoConteudo(conteudo.id);
+                          return linkArquivo ? (
+                          <a
+                            href={linkArquivo}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 underline"
+                          >
+                            Baixar arquivo
+                          </a>
+                        ) : (
+                          <span className="text-xs text-red-600">Arquivo indisponível</span>
+                        );
+                        })()
                       ) : (
                         <span className="whitespace-pre-line text-xs text-gray-600">{conteudo.descricao}</span>
                       )}
