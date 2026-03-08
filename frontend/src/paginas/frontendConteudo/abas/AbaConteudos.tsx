@@ -2,7 +2,6 @@ import { ChangeEvent, FormEvent, useMemo, useState } from 'react';
 import DOMPurify from 'dompurify';
 import { useConteudos } from '../../../hooks/useConteudos';
 import { TipoConteudo, TipoNotificacao } from '../../../types/enums';
-import { resolverUrlConteudo } from '../../../utils/urlConteudo';
 
 type Props = {
   exibirNotificacao: (notificacao: { tipo: TipoNotificacao; mensagem: string }) => void;
@@ -24,7 +23,7 @@ export default function AbaConteudos({ exibirNotificacao }: Props) {
   const [erroArquivo, definirErroArquivo] = useState<string | null>(null);
   const [progressoUpload, definirProgressoUpload] = useState(0);
 
-  const { consultaConteudos, mutacaoCriar, mutacaoCriarComArquivo, mutacaoRemover } = useConteudos({
+  const { consultaConteudos, mutacaoCriar, mutacaoCriarComArquivo, mutacaoBaixarArquivo, mutacaoRemover } = useConteudos({
     onSuccessSave: () => {
       exibirNotificacao({ tipo: TipoNotificacao.SUCESSO, mensagem: 'Conteúdo salvo com sucesso.' });
       redefinirFormulario();
@@ -157,8 +156,22 @@ export default function AbaConteudos({ exibirNotificacao }: Props) {
   const estaSalvando = mutacaoCriar.isPending || mutacaoCriarComArquivo.isPending;
   const deveExibirProgresso = progressoUpload > 0 && tipo === TipoConteudo.ARQUIVO;
 
-  function obterLinkArquivoConteudo(id: number): string | null {
-    return resolverUrlConteudo(`/api/conteudos/${id}/arquivo`);
+  function baixarArquivo(conteudoId: number) {
+    mutacaoBaixarArquivo.mutate(conteudoId, {
+      onSuccess: ({ arquivo, nomeArquivo }) => {
+        const urlArquivo = window.URL.createObjectURL(arquivo);
+        const ancora = document.createElement('a');
+        ancora.href = urlArquivo;
+        ancora.download = nomeArquivo ?? `conteudo-${conteudoId}`;
+        document.body.appendChild(ancora);
+        ancora.click();
+        ancora.remove();
+        window.URL.revokeObjectURL(urlArquivo);
+      },
+      onError: () => {
+        exibirNotificacao({ tipo: TipoNotificacao.ERRO, mensagem: 'Não foi possível baixar o arquivo.' });
+      },
+    });
   }
 
   return (
@@ -329,21 +342,14 @@ export default function AbaConteudos({ exibirNotificacao }: Props) {
                           Abrir link
                         </a>
                       ) : conteudo.tipo === TipoConteudo.ARQUIVO ? (
-                        (() => {
-                          const linkArquivo = obterLinkArquivoConteudo(conteudo.id);
-                          return linkArquivo ? (
-                          <a
-                            href={linkArquivo}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 underline"
-                          >
-                            Baixar arquivo
-                          </a>
-                        ) : (
-                          <span className="text-xs text-red-600">Arquivo indisponível</span>
-                        );
-                        })()
+                        <button
+                          type="button"
+                          onClick={() => baixarArquivo(conteudo.id)}
+                          className="text-blue-600 underline disabled:cursor-not-allowed disabled:text-blue-300"
+                          disabled={mutacaoBaixarArquivo.isPending}
+                        >
+                          {mutacaoBaixarArquivo.isPending ? 'Baixando...' : 'Baixar arquivo'}
+                        </button>
                       ) : (
                         <span className="whitespace-pre-line text-xs text-gray-600">{conteudo.descricao}</span>
                       )}

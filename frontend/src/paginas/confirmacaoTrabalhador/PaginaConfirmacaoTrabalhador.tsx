@@ -62,7 +62,7 @@ export default function PaginaConfirmacaoTrabalhador() {
   const urlSegura = sanitizarUrl(urlConteudo);
   const nomeArquivoSeguro = sanitizarNomeArquivo(nomeArquivo);
   const confirmacaoConcluida = mutacaoConfirmacao.isSuccess;
-  const tipoArquivo = identificarTipoArquivo(nomeArquivoSeguro);
+  const tipoArquivo = identificarTipoArquivo(urlSegura, nomeArquivoSeguro);
 
   return (
     <LayoutPagina>
@@ -185,15 +185,15 @@ function sanitizarNomeArquivo(valor: string | null): string | null {
 
 type TipoArquivo = 'pdf' | 'imagem' | 'audio' | 'video' | 'desconhecido';
 
-function identificarTipoArquivo(url: string | null): TipoArquivo {
-  if (!url) {
+function identificarTipoArquivo(url: string | null, nomeArquivo: string | null): TipoArquivo {
+  const fonteTipo = (nomeArquivo ?? url ?? '').split('?')[0].toLowerCase();
+  if (!fonteTipo) {
     return 'desconhecido';
   }
-  const caminhoLimpo = url.split('?')[0].toLowerCase();
-  if (caminhoLimpo.endsWith('.pdf')) return 'pdf';
-  if (/(\.jpg|\.jpeg|\.png|\.gif|\.webp)$/.test(caminhoLimpo)) return 'imagem';
-  if (/(\.mp3|\.wav|\.ogg|\.m4a|\.aac)$/.test(caminhoLimpo)) return 'audio';
-  if (/(\.mp4|\.webm|\.ogv|\.mov)$/i.test(caminhoLimpo)) return 'video';
+  if (fonteTipo.endsWith('.pdf')) return 'pdf';
+  if (/(\.jpg|\.jpeg|\.png|\.gif|\.webp)$/.test(fonteTipo)) return 'imagem';
+  if (/(\.mp3|\.wav|\.ogg|\.m4a|\.aac)$/.test(fonteTipo)) return 'audio';
+  if (/(\.mp4|\.webm|\.ogv|\.mov)$/i.test(fonteTipo)) return 'video';
   return 'desconhecido';
 }
 

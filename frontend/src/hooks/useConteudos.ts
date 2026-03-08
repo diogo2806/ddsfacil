@@ -6,6 +6,7 @@ import {
   criarConteudoComArquivo,
   listarConteudos,
   removerConteudo,
+  baixarArquivoConteudo,
 } from '../servicos/conteudosServico';
 
 type UseConteudosOptions = {
@@ -51,6 +52,10 @@ export function useConteudos(options: UseConteudosOptions = {}) {
     onError: () => options.onErrorSave?.(),
   });
 
+  const mutacaoBaixarArquivo = useMutation({
+    mutationFn: (id: number) => baixarArquivoConteudo(id),
+  });
+
   const mutacaoRemover = useMutation({
     mutationFn: (id: number) => removerConteudo(id),
     onSuccess: () => {
@@ -64,6 +69,7 @@ export function useConteudos(options: UseConteudosOptions = {}) {
     consultaConteudos,
     mutacaoCriar,
     mutacaoCriarComArquivo,
+    mutacaoBaixarArquivo,
     mutacaoRemover,
   };
 }
