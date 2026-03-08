@@ -60,3 +60,19 @@ export async function criarConteudoComArquivo(
 export async function removerConteudo(id: number): Promise<void> {
   await clienteHttp.delete(`/api/conteudos/${id}`);
 }
+
+export async function baixarArquivoConteudo(id: number): Promise<{ arquivo: Blob; nomeArquivo: string | null }> {
+  const resposta = await clienteHttp.get<Blob>(`/api/conteudos/${id}/arquivo`, {
+    responseType: 'blob',
+  });
+
+  const contentDisposition = resposta.headers['content-disposition'];
+  const nomeArquivo = typeof contentDisposition === 'string'
+    ? contentDisposition.match(/filename="?([^";]+)"?/i)?.[1] ?? null
+    : null;
+
+  return {
+    arquivo: resposta.data,
+    nomeArquivo,
+  };
+}
