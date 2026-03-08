@@ -2,6 +2,7 @@ package br.com.ddsfacil.confirmacaoTrabalhador.application;
 
 import br.com.ddsfacil.conteudo.domain.ConteudoDdsEntity;
 import br.com.ddsfacil.confirmacaoTrabalhador.infrastructure.dto.ConfirmacaoTrabalhadorArquivoResponse;
+import br.com.ddsfacil.conteudo.infrastructure.storage.ConteudoArquivoStorageService;
 import br.com.ddsfacil.confirmacaoTrabalhador.infrastructure.dto.ConfirmacaoTrabalhadorConfirmacaoResponse;
 import br.com.ddsfacil.confirmacaoTrabalhador.infrastructure.dto.ConfirmacaoTrabalhadorResponse;
 import br.com.ddsfacil.conteudo.domain.TipoConteudo;
@@ -20,9 +21,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class ConfirmacaoTrabalhadorService {
 
     private final EnvioDdsRepository envioRepositorio;
+    private final ConteudoArquivoStorageService conteudoArquivoStorageService;
 
-    public ConfirmacaoTrabalhadorService(EnvioDdsRepository envioRepositorio) {
+    public ConfirmacaoTrabalhadorService(
+            EnvioDdsRepository envioRepositorio,
+            ConteudoArquivoStorageService conteudoArquivoStorageService
+    ) {
         this.envioRepositorio = envioRepositorio;
+        this.conteudoArquivoStorageService = conteudoArquivoStorageService;
     }
 
     @Transactional(readOnly = true)
@@ -103,6 +109,9 @@ public class ConfirmacaoTrabalhadorService {
     private byte[] obterDadosArquivo(ConteudoDdsEntity conteudo) {
         if (conteudo.getArquivoDados() != null && conteudo.getArquivoDados().length > 0) {
             return conteudo.getArquivoDados();
+        }
+        if (conteudo.getArquivoPath() != null && !conteudo.getArquivoPath().isBlank()) {
+            return conteudoArquivoStorageService.buscar(conteudo.getArquivoPath());
         }
         return null;
     }

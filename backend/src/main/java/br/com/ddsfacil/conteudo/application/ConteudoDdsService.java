@@ -4,12 +4,13 @@ import br.com.ddsfacil.configuracao.multitenant.ContextoEmpresa;
 import br.com.ddsfacil.conteudo.domain.ConteudoDdsEntity;
 import br.com.ddsfacil.conteudo.domain.TipoConteudo;
 import br.com.ddsfacil.conteudo.infrastructure.ConteudoDdsRepository;
+import br.com.ddsfacil.conteudo.infrastructure.storage.ConteudoArquivoStorageService;
 import br.com.ddsfacil.conteudo.infrastructure.dto.ConteudoDdsArquivoResponse;
 import br.com.ddsfacil.conteudo.infrastructure.dto.ConteudoDdsRequest;
 import br.com.ddsfacil.conteudo.infrastructure.dto.ConteudoDdsResponse;
-import br.com.ddsfacil.envio.infrastructure.EnvioDdsRepository; // <--- IMPORTAR
+import br.com.ddsfacil.envio.infrastructure.EnvioDdsRepository;
 import br.com.ddsfacil.excecao.RecursoNaoEncontradoException;
-import br.com.ddsfacil.excecao.RegraNegocioException; // <--- IMPORTAR
+import br.com.ddsfacil.excecao.RegraNegocioException;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -30,17 +31,21 @@ public class ConteudoDdsService {
     private static final Logger log = LoggerFactory.getLogger(ConteudoDdsService.class);
     
     private final ConteudoDdsRepository conteudoRepositorio;
-    private final EnvioDdsRepository envioRepositorio; // <--- ADICIONAR DEPENDENCIA
+    private final EnvioDdsRepository envioRepositorio;
+    private final ConteudoArquivoStorageService conteudoArquivoStorageService;
 
-    // ATUALIZAR CONSTRUTOR
-    public ConteudoDdsService(ConteudoDdsRepository conteudoRepositorio, EnvioDdsRepository envioRepositorio) {
+    public ConteudoDdsService(
+            ConteudoDdsRepository conteudoRepositorio,
+            EnvioDdsRepository envioRepositorio,
+            ConteudoArquivoStorageService conteudoArquivoStorageService
+    ) {
         this.conteudoRepositorio = conteudoRepositorio;
         this.envioRepositorio = envioRepositorio;
+        this.conteudoArquivoStorageService = conteudoArquivoStorageService;
     }
 
     @Transactional
     public ConteudoDdsResponse criar(ConteudoDdsRequest requisicao) {
-        // ... (código existente mantido igual) ...
         Objects.requireNonNull(requisicao, "Requisição não pode ser nula.");
         String tituloLimpo = sanitizarTextoCurto(requisicao.getTitulo());
         String descricaoLimpa = sanitizarTextoLongo(requisicao.getDescricao());
@@ -51,6 +56,7 @@ public class ConteudoDdsService {
         String url = requisicao.getUrl();
         String arquivoNome = requisicao.getArquivoNome();
         byte[] arquivoDados = null;
+        String arquivoPath = null;
 
         if (tipoEnum == TipoConteudo.ARQUIVO) {
             MultipartFile arquivo = requisicao.getArquivo();
@@ -66,6 +72,8 @@ public class ConteudoDdsService {
             try {
                 arquivoDados = arquivo.getBytes();
                 arquivoNome = nomeLimpo;
+                arquivoPath = conteudoArquivoStorageService.salvar(arquivoDados, arquivoNome);
+                arquivoDados = null;
                 url = null;
             } catch (Exception e) {
                 log.error("Erro ao processar o arquivo enviado.", e);
@@ -82,7 +90,7 @@ public class ConteudoDdsService {
                 tipoEnum,
                 url,
                 arquivoNome,
-                null,
+                arquivoPath,
                 arquivoDados,
                 empresaId
         );
@@ -100,8 +108,7 @@ public class ConteudoDdsService {
 
     @Transactional(readOnly = true)
     public ConteudoDdsArquivoResponse buscarArquivo(Long id) {
-         // ... (código existente mantido igual) ...
-        ConteudoDdsEntity conteudo = conteudoRepositorio
+         ConteudoDdsEntity conteudo = conteudoRepositorio
                 .findById(id)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Conteúdo não encontrado."));
 
@@ -110,6 +117,9 @@ public class ConteudoDdsService {
         }
 
         byte[] dadosArquivo = conteudo.getArquivoDados();
+        if ((dadosArquivo == null || dadosArquivo.length == 0) && conteudo.getArquivoPath() != null && !conteudo.getArquivoPath().isBlank()) {
+            dadosArquivo = conteudoArquivoStorageService.buscar(conteudo.getArquivoPath());
+        }
         if (dadosArquivo == null || dadosArquivo.length == 0) {
             throw new RecursoNaoEncontradoException("Arquivo do conteúdo não encontrado ou vazio.");
         }
@@ -130,12 +140,10 @@ public class ConteudoDdsService {
             throw new RecursoNaoEncontradoException("Conteúdo não encontrado.");
         }
 
-        // --- NOVA VALIDAÇÃO ---
         if (envioRepositorio.existsByConteudoId(id)) {
             log.warn("Tentativa de remover conteúdo ID: {} que possui envios vinculados.", id);
             throw new RegraNegocioException("Não é possível excluir este conteúdo pois ele já foi enviado para funcionários. Para manter o histórico de segurança, o conteúdo não pode ser apagado.");
         }
-        // ----------------------
 
         conteudoRepositorio.deleteById(id);
         log.info("Conteúdo ID: {} removido com sucesso.", id);
@@ -153,7 +161,6 @@ public class ConteudoDdsService {
         );
     }
     
-    // ... (métodos privados auxiliares mantidos iguais) ...
     private String sanitizarTextoCurto(String texto) {
         return Jsoup.clean(texto, Safelist.none());
     }
