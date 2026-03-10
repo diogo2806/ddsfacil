@@ -70,4 +70,11 @@ public class UsuarioEntity {
         this.perfil = perfil;
         this.ativo = true;
     }
+
+    public void atualizarDadosAcesso(String nome, String email, String senhaHash) {
+        this.nome = nome;
+        this.email = email;
+        this.senhaHash = senhaHash;
+        this.ativo = true;
+    }
 }
