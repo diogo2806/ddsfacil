@@ -27,3 +27,12 @@ If you don't have Java 21 installed locally, use the provided Dockerfile which b
 ## Multi-tenant (Isolamento por Empresa)
 
 Todas as chamadas privadas da API exigem o envio do cabeçalho `X-Empresa-Id` com o identificador numérico da empresa. Esse valor é usado pelo filtro global do Hibernate para garantir que cada consulta retorne apenas os dados da empresa informada. Os endpoints públicos sob `/api/public/**` continuam acessíveis sem o cabeçalho, pois são utilizados pelos trabalhadores via token seguro.
+
+## Credenciais do painel por variável de ambiente
+
+As credenciais do usuário administrador padrão podem ser definidas por variáveis de ambiente:
+
+- `DDSFACIL_ADMIN_EMAIL` (ex.: `admin@empresa.com.br`)
+- `DDSFACIL_ADMIN_SENHA` (ex.: `SenhaForte@2026`)
+
+No boot da aplicação, o backend sincroniza automaticamente o usuário `ADMIN` da empresa padrão (id `1`) com esses valores.
