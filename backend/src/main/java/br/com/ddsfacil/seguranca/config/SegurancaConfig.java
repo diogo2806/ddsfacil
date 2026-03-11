@@ -28,6 +28,8 @@ public class SegurancaConfig {
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/jobrunr/**").permitAll()
+                        .requestMatchers("/api/**").permitAll()
+                        .requestMatchers("/sse/**").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
                         .anyRequest().authenticated()
                 )
