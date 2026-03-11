@@ -19,7 +19,10 @@ public class CorsConfig {
                                 "http://localhost:5173",
                                 "https://ddsfacil.valenstech.com.br",
                                 "https://www.ddsfacil.valenstech.com.br",
-                                "https://api-ddsfacil.valenstech.com.br")
+                                "https://api-ddsfacil.valenstech.com.br",
+                                "https://ddsfacil.iforce.com.br",
+                                "https://www.ddsfacil.iforce.com.br",
+                                "https://api-ddsfacil.iforce.com.br")
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true)
