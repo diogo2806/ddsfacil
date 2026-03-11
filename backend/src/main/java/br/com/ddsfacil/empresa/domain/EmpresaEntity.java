@@ -37,4 +37,15 @@ public class EmpresaEntity {
     @CreationTimestamp
     @Column(name = "criado_em", nullable = false, updatable = false)
     private LocalDateTime criadoEm;
+
+    public EmpresaEntity(String razaoSocial, String cnpj, String tenantSlug) {
+        this.razaoSocial = razaoSocial;
+        this.cnpj = cnpj;
+        this.tenantSlug = tenantSlug;
+        this.ativo = true;
+    }
+
+    public void ativar() {
+        this.ativo = true;
+    }
 }

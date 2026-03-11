@@ -21,7 +21,10 @@ public class AdminInicialBootstrap {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AdminInicialBootstrap.class);
     private static final Long EMPRESA_PADRAO_ID = 1L;
-    private static final String NOME_ADMIN_PADRAO = "Administrador DDS Facil";
+    private static final String NOME_ADMIN_PADRAO = "Administrador DDS Fácil";
+    private static final String RAZAO_SOCIAL_EMPRESA_PADRAO = "Empresa Padrão";
+    private static final String CNPJ_EMPRESA_PADRAO = "00000000000000";
+    private static final String TENANT_SLUG_EMPRESA_PADRAO = "empresa-padrao";
 
     private final AdminInicialPropriedades propriedades;
     private final UsuarioRepository usuarioRepository;
@@ -71,8 +74,7 @@ public class AdminInicialBootstrap {
             return;
         }
 
-        EmpresaEntity empresa = empresaRepository.findById(EMPRESA_PADRAO_ID)
-                .orElseThrow(() -> new IllegalStateException("Empresa padrão não encontrada para criação do usuário admin."));
+        EmpresaEntity empresa = obterOuCriarEmpresaPadrao();
 
         UsuarioEntity novoAdmin = new UsuarioEntity(
                 empresa,
@@ -83,5 +85,21 @@ public class AdminInicialBootstrap {
         );
         usuarioRepository.save(novoAdmin);
         LOGGER.info("Usuário admin criado para a empresa padrão com o e-mail {}.", emailConfigurado);
+    }
+
+    private EmpresaEntity obterOuCriarEmpresaPadrao() {
+        return empresaRepository.findById(EMPRESA_PADRAO_ID)
+                .map(empresa -> {
+                    if (!empresa.isAtivo()) {
+                        empresa.ativar();
+                        return empresaRepository.save(empresa);
+                    }
+                    return empresa;
+                })
+                .orElseGet(() -> empresaRepository.save(new EmpresaEntity(
+                        RAZAO_SOCIAL_EMPRESA_PADRAO,
+                        CNPJ_EMPRESA_PADRAO,
+                        TENANT_SLUG_EMPRESA_PADRAO
+                )));
     }
 }
