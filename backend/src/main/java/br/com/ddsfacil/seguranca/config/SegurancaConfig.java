@@ -28,6 +28,8 @@ public class SegurancaConfig {
         return (web) -> web.ignoring().requestMatchers(
                 new AntPathRequestMatcher("/jobrunr/**"),
                 new AntPathRequestMatcher("/jobrunr"),
+                new AntPathRequestMatcher("/dashboard/**"),
+                new AntPathRequestMatcher("/dashboard"),
                 new AntPathRequestMatcher("/api/jobs/**"),
                 new AntPathRequestMatcher("/api/jobs"),
                 new AntPathRequestMatcher("/api/recurring-jobs/**"),
@@ -50,6 +52,18 @@ public class SegurancaConfig {
                 .cors(cors -> {})
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/jobrunr/**",
+                                "/jobrunr",
+                                "/dashboard/**",
+                                "/dashboard",
+                                "/api/jobs/**",
+                                "/api/recurring-jobs/**",
+                                "/api/servers/**",
+                                "/api/problems/**",
+                                "/api/version/**",
+                                "/sse/**"
+                        ).permitAll()
                         .requestMatchers("/api/public/**").permitAll()
                         .anyRequest().authenticated()
                 )
