@@ -28,6 +28,8 @@ public class SegurancaConfig {
         return (web) -> web.ignoring().requestMatchers(
                 new AntPathRequestMatcher("/jobrunr/**"),
                 new AntPathRequestMatcher("/jobrunr"),
+                new AntPathRequestMatcher("/dashboard/**"),
+                new AntPathRequestMatcher("/dashboard"),
                 new AntPathRequestMatcher("/api/jobs/**"),
                 new AntPathRequestMatcher("/api/jobs"),
                 new AntPathRequestMatcher("/api/recurring-jobs/**"),
