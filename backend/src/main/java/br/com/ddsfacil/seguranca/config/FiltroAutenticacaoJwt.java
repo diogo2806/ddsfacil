@@ -32,6 +32,12 @@ public class FiltroAutenticacaoJwt extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        String path = request.getRequestURI();
+        if (isRotaJobRunr(path)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String autorizacao = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (StringUtils.hasText(autorizacao) && autorizacao.startsWith("Bearer ")) {
             String token = autorizacao.substring(7);
@@ -52,5 +58,14 @@ public class FiltroAutenticacaoJwt extends OncePerRequestFilter {
             }
         }
         filterChain.doFilter(request, response);
+    }
+
+    private boolean isRotaJobRunr(String path) {
+        return path.startsWith("/jobrunr")
+                || path.startsWith("/api/jobs")
+                || path.startsWith("/api/servers")
+                || path.startsWith("/api/problems")
+                || path.startsWith("/api/version")
+                || path.startsWith("/sse");
     }
 }
