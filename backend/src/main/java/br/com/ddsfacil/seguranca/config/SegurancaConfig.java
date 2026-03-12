@@ -24,14 +24,24 @@ public class SegurancaConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.ignoringRequestMatchers(new AntPathRequestMatcher("/jobrunr/**")).disable())
+                .csrf(csrf -> csrf.disable())
                 .cors(cors -> {})
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/jobrunr").permitAll()
-                        .requestMatchers("/jobrunr/**").permitAll()
-                        .requestMatchers("/api/**").permitAll()
-                        .requestMatchers("/sse/**").permitAll()
+                        .requestMatchers(
+                                new AntPathRequestMatcher("/jobrunr/**"),
+                                new AntPathRequestMatcher("/jobrunr"),
+                                new AntPathRequestMatcher("/api/jobs/**"),
+                                new AntPathRequestMatcher("/api/jobs"),
+                                new AntPathRequestMatcher("/api/servers/**"),
+                                new AntPathRequestMatcher("/api/servers"),
+                                new AntPathRequestMatcher("/api/problems/**"),
+                                new AntPathRequestMatcher("/api/problems"),
+                                new AntPathRequestMatcher("/api/version/**"),
+                                new AntPathRequestMatcher("/api/version"),
+                                new AntPathRequestMatcher("/sse/**"),
+                                new AntPathRequestMatcher("/sse")
+                        ).permitAll()
                         .requestMatchers("/api/public/**").permitAll()
                         .anyRequest().authenticated()
                 )

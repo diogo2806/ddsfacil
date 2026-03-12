@@ -32,19 +32,24 @@ public class FiltroEmpresaTenant extends OncePerRequestFilter {
     private EntityManager entityManager;
 
     @Override
-protected boolean shouldNotFilter(HttpServletRequest request) {
-    String uri = request.getRequestURI();
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String uri = request.getRequestURI();
 
-    boolean publicEndpoint = uri != null && uri.startsWith("/api/public/");
-    boolean jobrunrEndpoint =
-            uri.startsWith("/jobrunr") ||
-            uri.startsWith("/api/") ||
-            uri.startsWith("/sse/");
+        boolean publicEndpoint = uri != null && uri.startsWith("/api/public/");
+        
+        boolean jobrunrEndpoint = uri != null && (
+                uri.startsWith("/jobrunr") ||
+                uri.startsWith("/api/jobs") ||
+                uri.startsWith("/api/servers") ||
+                uri.startsWith("/api/problems") ||
+                uri.startsWith("/api/version") ||
+                uri.startsWith("/sse")
+        );
 
-    boolean preflight = "OPTIONS".equalsIgnoreCase(request.getMethod());
+        boolean preflight = "OPTIONS".equalsIgnoreCase(request.getMethod());
 
-    return publicEndpoint || jobrunrEndpoint || preflight;
-}
+        return publicEndpoint || jobrunrEndpoint || preflight;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
