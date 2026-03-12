@@ -63,6 +63,7 @@ public class FiltroAutenticacaoJwt extends OncePerRequestFilter {
     private boolean isRotaJobRunr(String path) {
         return path.startsWith("/jobrunr")
                 || path.startsWith("/api/jobs")
+                || path.startsWith("/api/recurring-jobs")
                 || path.startsWith("/api/servers")
                 || path.startsWith("/api/problems")
                 || path.startsWith("/api/version")

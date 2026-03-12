@@ -4,12 +4,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableMethodSecurity
@@ -21,6 +22,27 @@ public class SegurancaConfig {
         this.filtroAutenticacaoJwt = filtroAutenticacaoJwt;
     }
 
+    // Libera o Spring Security completamente para as rotas exclusivas do JobRunr
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return (web) -> web.ignoring().requestMatchers(
+                new AntPathRequestMatcher("/jobrunr/**"),
+                new AntPathRequestMatcher("/jobrunr"),
+                new AntPathRequestMatcher("/api/jobs/**"),
+                new AntPathRequestMatcher("/api/jobs"),
+                new AntPathRequestMatcher("/api/recurring-jobs/**"),
+                new AntPathRequestMatcher("/api/recurring-jobs"),
+                new AntPathRequestMatcher("/api/servers/**"),
+                new AntPathRequestMatcher("/api/servers"),
+                new AntPathRequestMatcher("/api/problems/**"),
+                new AntPathRequestMatcher("/api/problems"),
+                new AntPathRequestMatcher("/api/version/**"),
+                new AntPathRequestMatcher("/api/version"),
+                new AntPathRequestMatcher("/sse/**"),
+                new AntPathRequestMatcher("/sse")
+        );
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -28,20 +50,6 @@ public class SegurancaConfig {
                 .cors(cors -> {})
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                new AntPathRequestMatcher("/jobrunr/**"),
-                                new AntPathRequestMatcher("/jobrunr"),
-                                new AntPathRequestMatcher("/api/jobs/**"),
-                                new AntPathRequestMatcher("/api/jobs"),
-                                new AntPathRequestMatcher("/api/servers/**"),
-                                new AntPathRequestMatcher("/api/servers"),
-                                new AntPathRequestMatcher("/api/problems/**"),
-                                new AntPathRequestMatcher("/api/problems"),
-                                new AntPathRequestMatcher("/api/version/**"),
-                                new AntPathRequestMatcher("/api/version"),
-                                new AntPathRequestMatcher("/sse/**"),
-                                new AntPathRequestMatcher("/sse")
-                        ).permitAll()
                         .requestMatchers("/api/public/**").permitAll()
                         .anyRequest().authenticated()
                 )
