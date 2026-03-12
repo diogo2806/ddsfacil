@@ -39,6 +39,7 @@ public class FiltroEmpresaTenant extends OncePerRequestFilter {
         
         boolean jobrunrEndpoint = uri != null && (
                 uri.startsWith("/jobrunr") ||
+                uri.startsWith("/dashboard") ||
                 uri.startsWith("/api/jobs") ||
                 uri.startsWith("/api/recurring-jobs") ||
                 uri.startsWith("/api/servers") ||
