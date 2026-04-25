@@ -37,7 +37,7 @@ public class TwilioServicoSms implements ServicoSms {
     }
 
     @Override
-    public void enviarMensagem(String numeroDestino, String mensagem) {
+    public void enviarMensagem(String numeroDestino, String mensagem, Long envioId) {
         if (!propriedades.isHabilitado()) {
             LOGGER.info("Envio de SMS desabilitado. Mensagem para {} não será enviada.", numeroDestino);
             return;
@@ -54,6 +54,10 @@ public class TwilioServicoSms implements ServicoSms {
         corpo.add("To", numeroDestino);
         corpo.add("From", propriedades.getNumeroOrigem());
         corpo.add("Body", mensagem);
+        String statusCallback = propriedades.montarUrlStatusCallback(envioId);
+        if (statusCallback != null) {
+            corpo.add("StatusCallback", statusCallback);
+        }
         try {
             cliente
                 .post()

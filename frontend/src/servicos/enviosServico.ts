@@ -13,6 +13,7 @@ export type EnvioDds = {
   dataEnvio: string;
   momentoEnvio: string;
   momentoConfirmacao: string | null;
+  mensagemErroEntrega?: string | null; // <--- NOVO
 };
 export type CadastroEnvio = {
   conteudoId: number;

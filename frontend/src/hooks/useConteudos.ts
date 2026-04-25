@@ -6,6 +6,7 @@ import {
   criarConteudoComArquivo,
   listarConteudos,
   removerConteudo,
+  baixarArquivoConteudo,
 } from '../servicos/conteudosServico';
 
 type UseConteudosOptions = {
@@ -35,13 +36,24 @@ export function useConteudos(options: UseConteudosOptions = {}) {
   });
 
   const mutacaoCriarComArquivo = useMutation({
-    mutationFn: (form: { dados: CadastroConteudo; arquivo: File }) =>
-      criarConteudoComArquivo({ ...form.dados, arquivo: form.arquivo }),
+    mutationFn: (form: {
+      dados: CadastroConteudo;
+      arquivo: File;
+      aoProgredir?: (progresso: number) => void;
+    }) =>
+      criarConteudoComArquivo(
+        { ...form.dados, arquivo: form.arquivo },
+        { onUploadProgress: form.aoProgredir },
+      ),
     onSuccess: () => {
       clienteConsulta.invalidateQueries({ queryKey: ['conteudos'] });
       options.onSuccessSave?.();
     },
     onError: () => options.onErrorSave?.(),
+  });
+
+  const mutacaoBaixarArquivo = useMutation({
+    mutationFn: (id: number) => baixarArquivoConteudo(id),
   });
 
   const mutacaoRemover = useMutation({
@@ -57,6 +69,7 @@ export function useConteudos(options: UseConteudosOptions = {}) {
     consultaConteudos,
     mutacaoCriar,
     mutacaoCriarComArquivo,
+    mutacaoBaixarArquivo,
     mutacaoRemover,
   };
 }

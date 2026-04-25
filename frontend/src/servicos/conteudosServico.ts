@@ -9,7 +9,6 @@ export type ConteudoDds = {
   tipo?: TipoConteudo;
   url?: string | null;
   arquivoNome?: string | null;
-  arquivoPath?: string | null;
 };
 export type CadastroConteudo = {
   titulo: string;
@@ -29,7 +28,14 @@ export async function criarConteudo(dados: CadastroConteudo): Promise<ConteudoDd
   return resposta.data;
 }
 
-export async function criarConteudoComArquivo(dados: CadastroConteudo): Promise<ConteudoDds> {
+type OpcoesUploadConteudo = {
+  onUploadProgress?: (percentual: number) => void;
+};
+
+export async function criarConteudoComArquivo(
+  dados: CadastroConteudo,
+  opcoes?: OpcoesUploadConteudo,
+): Promise<ConteudoDds> {
   const form = new FormData();
   form.append('titulo', dados.titulo);
   form.append('descricao', dados.descricao ?? '');
@@ -41,10 +47,32 @@ export async function criarConteudoComArquivo(dados: CadastroConteudo): Promise<
   // CORREÇÃO: Adicionado o prefixo /api/
   const resposta = await clienteHttp.post<ConteudoDds>('/api/conteudos/upload', form, {
     headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress: (evento) => {
+      if (typeof evento.total === 'number' && evento.total > 0) {
+        const percentual = Math.round((evento.loaded * 100) / evento.total);
+        opcoes?.onUploadProgress?.(percentual);
+      }
+    },
   });
   return resposta.data;
 }
 
 export async function removerConteudo(id: number): Promise<void> {
   await clienteHttp.delete(`/api/conteudos/${id}`);
+}
+
+export async function baixarArquivoConteudo(id: number): Promise<{ arquivo: Blob; nomeArquivo: string | null }> {
+  const resposta = await clienteHttp.get<Blob>(`/api/conteudos/${id}/arquivo`, {
+    responseType: 'blob',
+  });
+
+  const contentDisposition = resposta.headers['content-disposition'];
+  const nomeArquivo = typeof contentDisposition === 'string'
+    ? contentDisposition.match(/filename="?([^";]+)"?/i)?.[1] ?? null
+    : null;
+
+  return {
+    arquivo: resposta.data,
+    nomeArquivo,
+  };
 }

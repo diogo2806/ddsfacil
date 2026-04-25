@@ -8,6 +8,7 @@ import {
   DadosConfirmacaoTrabalhador,
 } from '../../servicos/confirmacaoTrabalhadorServico';
 import { TipoConteudo } from '../../types/enums';
+import { resolverUrlConteudo } from '../../utils/urlConteudo';
 
 export default function PaginaConfirmacaoTrabalhador() {
   const parametros = useParams<{ token: string }>();
@@ -31,7 +32,7 @@ export default function PaginaConfirmacaoTrabalhador() {
 
   const tipoConteudo = consultaConteudo.data?.tipoConteudo;
   const urlSegura = sanitizarUrl(consultaConteudo.data?.urlConteudo ?? null);
-  const tipoArquivo = identificarTipoArquivo(urlSegura);
+  const tipoArquivo = identificarTipoArquivo(urlSegura, consultaConteudo.data?.nomeArquivo ?? null);
 
   useEffect(() => {
     definirVisualizacaoFalhou(false);
@@ -213,8 +214,7 @@ function sanitizarUrl(valor: string | null): string | null {
   if (!urlLimpa) {
     return null;
   }
-  const urlValida = /^https?:\/\/|^\//i;
-  return urlValida.test(urlLimpa) ? urlLimpa : null;
+  return resolverUrlConteudo(urlLimpa);
 }
 
 function sanitizarNomeArquivo(valor: string | null): string | null {
@@ -226,15 +226,15 @@ function sanitizarNomeArquivo(valor: string | null): string | null {
 
 type TipoArquivo = 'pdf' | 'imagem' | 'audio' | 'video' | 'desconhecido';
 
-function identificarTipoArquivo(url: string | null): TipoArquivo {
-  if (!url) {
+function identificarTipoArquivo(url: string | null, nomeArquivo: string | null): TipoArquivo {
+  const fonteTipo = (nomeArquivo ?? url ?? '').split('?')[0].toLowerCase();
+  if (!fonteTipo) {
     return 'desconhecido';
   }
-  const caminhoLimpo = url.split('?')[0].toLowerCase();
-  if (caminhoLimpo.endsWith('.pdf')) return 'pdf';
-  if (/(\.jpg|\.jpeg|\.png|\.gif|\.webp)$/.test(caminhoLimpo)) return 'imagem';
-  if (/(\.mp3|\.wav|\.ogg|\.m4a|\.aac)$/.test(caminhoLimpo)) return 'audio';
-  if (/(\.mp4|\.webm|\.ogv|\.mov)$/i.test(caminhoLimpo)) return 'video';
+  if (fonteTipo.endsWith('.pdf')) return 'pdf';
+  if (/(\.jpg|\.jpeg|\.png|\.gif|\.webp)$/.test(fonteTipo)) return 'imagem';
+  if (/(\.mp3|\.wav|\.ogg|\.m4a|\.aac)$/.test(fonteTipo)) return 'audio';
+  if (/(\.mp4|\.webm|\.ogv|\.mov)$/i.test(fonteTipo)) return 'video';
   return 'desconhecido';
 }
 

@@ -3,6 +3,7 @@
 
 export enum TelaApp {
   DIVULGACAO = 'DIVULGACAO',
+  AUTENTICACAO = 'AUTENTICACAO',
   PAINEL = 'PAINEL',
 }
 
@@ -21,8 +22,10 @@ export enum TipoNotificacao {
 }
 
 export enum StatusEnvio {
-  ENVIADO = 'ENVIADO',
-  CONFIRMADO = 'CONFIRMADO',
+  PENDENTE = 'Pendente',
+  ENVIADO = 'Enviado',
+  CONFIRMADO = 'Confirmado',
+  FALHA = 'Falha', 
 }
 
 export enum AbaAdmin {
