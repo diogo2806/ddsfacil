@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import App from './paginas/frontendConteudo/App';
 import PaginaConfirmacaoTrabalhador from './paginas/confirmacaoTrabalhador/PaginaConfirmacaoTrabalhador';
+import PaginaRedefinirSenha from './paginas/recuperacaoSenha/PaginaRedefinirSenha';
 import './styles.css';
 import { obterEmpresaIdAtualObrigatorio, sincronizarEmpresaIdDaUrl } from './configuracao/empresa';
 
@@ -20,6 +21,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/" element={<App />} />
           <Route path="/painel" element={<App />} />
           <Route path="/c/:token" element={<PaginaConfirmacaoTrabalhador />} />
+          <Route path="/redefinir-senha" element={<PaginaRedefinirSenha />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

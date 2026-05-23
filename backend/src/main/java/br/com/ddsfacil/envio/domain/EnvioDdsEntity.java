@@ -73,6 +73,19 @@ public class EnvioDdsEntity {
     @Column(name = "erro_entrega", length = 500)
     private String erroEntrega;
 
+    @Column(name = "quantidade_lembretes", nullable = false)
+    private int quantidadeLembretes;
+
+    @Column(name = "momento_ultimo_lembrete")
+    private LocalDateTime momentoUltimoLembrete;
+
+    @Column(name = "momento_agendado")
+    private LocalDateTime momentoAgendado;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "canal", nullable = false, length = 20)
+    private CanalMensagem canal;
+
     public EnvioDdsEntity(
             FuncionarioEntity funcionarioEntity,
             ConteudoDdsEntity conteudo,
@@ -87,6 +100,13 @@ public class EnvioDdsEntity {
         this.status = StatusEnvioDds.PENDENTE;
         this.tokenAcesso = gerarToken();
         this.empresaId = empresaId;
+        this.canal = CanalMensagem.SMS;
+    }
+
+    public void definirCanal(CanalMensagem canal) {
+        if (canal != null) {
+            this.canal = canal;
+        }
     }
 
     public void confirmar(LocalDateTime momento) {
@@ -104,6 +124,15 @@ public class EnvioDdsEntity {
         this.status = StatusEnvioDds.ENVIADO;
         this.momentoEnvio = momento;
         this.erroEntrega = null;
+    }
+
+    public void registrarLembrete(LocalDateTime momento) {
+        this.quantidadeLembretes += 1;
+        this.momentoUltimoLembrete = momento;
+    }
+
+    public void definirAgendamento(LocalDateTime momentoAgendado) {
+        this.momentoAgendado = momentoAgendado;
     }
 
     public void registrarFalhaEntrega(String descricaoErro) {

@@ -4,6 +4,7 @@ package br.com.ddsfacil.envio.application;
 import br.com.ddsfacil.configuracao.multitenant.ContextoEmpresa;
 import br.com.ddsfacil.conteudo.domain.ConteudoDdsEntity;
 import br.com.ddsfacil.conteudo.infrastructure.ConteudoDdsRepository;
+import br.com.ddsfacil.envio.domain.CanalMensagem;
 import br.com.ddsfacil.envio.domain.EnvioDdsEntity;
 import br.com.ddsfacil.envio.domain.StatusEnvioDds;
 import br.com.ddsfacil.envio.infrastructure.EnvioDdsRepository;
@@ -14,8 +15,10 @@ import br.com.ddsfacil.excecao.RecursoNaoEncontradoException;
 import br.com.ddsfacil.funcionario.domain.FuncionarioEntity;
 import br.com.ddsfacil.funcionario.infrastructure.FuncionarioRepository;
 import br.com.ddsfacil.licenca.application.LicencaService;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -76,7 +79,18 @@ public class EnvioDdsService {
             throw new RecursoNaoEncontradoException("Alguns funcionários informados não foram encontrados.");
         }
 
-        LocalDate dataEnvio = requisicao.getDataEnvio() != null ? requisicao.getDataEnvio() : LocalDate.now();
+        LocalDateTime agora = LocalDateTime.now();
+        LocalDateTime momentoAgendado = requisicao.getAgendarPara();
+        boolean agendado = momentoAgendado != null && momentoAgendado.isAfter(agora);
+        CanalMensagem canal = requisicao.getCanal() == null ? CanalMensagem.SMS : requisicao.getCanal();
+
+        LocalDate dataEnvio;
+        if (agendado) {
+            dataEnvio = momentoAgendado.toLocalDate();
+        } else {
+            dataEnvio = requisicao.getDataEnvio() != null ? requisicao.getDataEnvio() : agora.toLocalDate();
+        }
+
         Map<Long, FuncionarioEntity> funcionariosPorId = funcionarioEntities
                 .stream()
                 .collect(Collectors.toMap(FuncionarioEntity::getId, funcionarioEntity -> funcionarioEntity, (primeiro, segundo) -> primeiro));
@@ -97,8 +111,12 @@ public class EnvioDdsService {
                 log.warn("Envio duplicado ignorado para funcionário ID: {} e conteúdo ID: {}", funcionarioId, conteudo.getId());
                 continue;
             }
-            LocalDateTime momentoEnvio = LocalDateTime.now();
+            LocalDateTime momentoEnvio = agendado ? momentoAgendado : agora;
             EnvioDdsEntity envio = new EnvioDdsEntity(funcionarioEntity, conteudo, dataEnvio, momentoEnvio, empresaId);
+            envio.definirCanal(canal);
+            if (agendado) {
+                envio.definirAgendamento(momentoAgendado);
+            }
             novosEnvios.add(envio);
         }
 
@@ -107,10 +125,16 @@ public class EnvioDdsService {
             return List.of();
         }
 
-        licencaService.debitarSms(empresaId, novosEnvios.size());
+        licencaService.debitar(empresaId, canal, novosEnvios.size());
         List<EnvioDdsEntity> salvos = envioRepositorio.saveAll(novosEnvios);
-        agendarEnvioDeSms(salvos);
-        log.info("Envio de {} SMSs agendado no JobRunr.", salvos.size());
+        if (agendado) {
+            Instant instante = momentoAgendado.atZone(ZoneId.systemDefault()).toInstant();
+            agendarEnvioDeSmsPara(salvos, instante);
+            log.info("Envio de {} SMS(s) agendado para {} no JobRunr.", salvos.size(), momentoAgendado);
+        } else {
+            agendarEnvioDeSms(salvos);
+            log.info("Envio de {} SMS(s) enfileirado no JobRunr.", salvos.size());
+        }
 
         return salvos.stream().map(this::mapearParaResposta).toList();
     }
@@ -148,6 +172,13 @@ public class EnvioDdsService {
         ));
     }
 
+    private void agendarEnvioDeSmsPara(List<EnvioDdsEntity> envios, Instant instante) {
+        envios.forEach(envio -> agendadorDeJobs.schedule(
+                instante,
+                () -> processadorDeJobs.processarEnvioUnitario(envio.getId())
+        ));
+    }
+
     private EnvioDdsResponse mapearParaResposta(EnvioDdsEntity envio) {
         return new EnvioDdsResponse(
                 envio.getId(),
@@ -160,7 +191,10 @@ public class EnvioDdsService {
                 envio.getDataEnvio(),
                 envio.getMomentoEnvio(),
                 envio.getMomentoConfirmacao(),
-                envio.getErroEntrega()
+                envio.getErroEntrega(),
+                envio.getQuantidadeLembretes(),
+                envio.getMomentoAgendado(),
+                envio.getCanal()
         );
     }
 }

@@ -79,7 +79,14 @@ export default function AbaDashboard() {
                 enviosRecentes.map((envio) => (
                   <tr key={envio.id} className={envio.status === StatusEnvio.FALHA ? 'bg-red-50' : ''}>
                     <td className="px-4 py-3">{envio.nomeFuncionario}</td>
-                    <td className="px-4 py-3">{envio.tituloConteudo}</td>
+                    <td className="px-4 py-3">
+                      {envio.tituloConteudo}
+                      {envio.canal === 'WHATSAPP' && (
+                        <span className="ml-2 inline-flex rounded-full bg-green-100 px-2 py-0.5 text-xs font-semibold text-green-700">
+                          WhatsApp
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-3">{new Date(`${envio.dataEnvio}T${envio.momentoEnvio}`).toLocaleString('pt-BR')}</td>
                     <td className="px-4 py-3">
                       <StatusBadge status={envio.status} />
@@ -109,7 +116,18 @@ export default function AbaDashboard() {
                             </div>
                         )}
                         {envio.status === StatusEnvio.CONFIRMADO && (
-                           <span className="text-xs text-green-600">Entregue e lido</span> 
+                           <span className="text-xs text-green-600">Entregue e lido</span>
+                        )}
+                        {(envio.status === StatusEnvio.ENVIADO || envio.status === StatusEnvio.PENDENTE) &&
+                          (envio.quantidadeLembretes ?? 0) > 0 && (
+                            <span className="text-xs text-amber-600">
+                              {envio.quantidadeLembretes} lembrete{envio.quantidadeLembretes === 1 ? '' : 's'} enviado{envio.quantidadeLembretes === 1 ? '' : 's'}
+                            </span>
+                        )}
+                        {envio.status === StatusEnvio.PENDENTE && envio.momentoAgendado && (
+                          <span className="text-xs text-blue-600">
+                            Agendado para {new Date(envio.momentoAgendado).toLocaleString('pt-BR')}
+                          </span>
                         )}
                     </td>
                   </tr>

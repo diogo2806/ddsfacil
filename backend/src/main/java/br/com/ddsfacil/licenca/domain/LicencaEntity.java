@@ -63,4 +63,57 @@ public class LicencaEntity {
         }
         saldoSms -= quantidade;
     }
+
+    public void consumirSaldoWhatsapp(int quantidade) {
+        if (quantidade <= 0) {
+            return;
+        }
+        if (saldoWhatsapp == null) {
+            saldoWhatsapp = 0;
+        }
+        if (saldoWhatsapp < quantidade) {
+            throw new RegraNegocioException("Saldo de WhatsApp insuficiente. Contate o suporte para contratar mais créditos.");
+        }
+        saldoWhatsapp -= quantidade;
+    }
+
+    public boolean pagamentoEmDia() {
+        return StatusPagamento.EM_DIA.name().equals(statusPagamento);
+    }
+
+    public void adicionarCreditosSms(int quantidade) {
+        if (quantidade <= 0) {
+            throw new RegraNegocioException("A quantidade de créditos deve ser positiva.");
+        }
+        if (saldoSms == null) {
+            saldoSms = 0;
+        }
+        saldoSms += quantidade;
+    }
+
+    public void adicionarCreditosWhatsapp(int quantidade) {
+        if (quantidade <= 0) {
+            throw new RegraNegocioException("A quantidade de créditos deve ser positiva.");
+        }
+        if (saldoWhatsapp == null) {
+            saldoWhatsapp = 0;
+        }
+        saldoWhatsapp += quantidade;
+    }
+
+    public void atualizarPlano(String tipoPlano) {
+        if (tipoPlano != null && !tipoPlano.isBlank()) {
+            this.tipoPlano = tipoPlano.trim();
+        }
+    }
+
+    public void definirStatusPagamento(StatusPagamento status) {
+        if (status != null) {
+            this.statusPagamento = status.name();
+        }
+    }
+
+    public void definirDataRenovacao(LocalDate dataRenovacao) {
+        this.dataRenovacao = dataRenovacao;
+    }
 }
