@@ -109,7 +109,13 @@ export default function AbaDashboard() {
                             </div>
                         )}
                         {envio.status === StatusEnvio.CONFIRMADO && (
-                           <span className="text-xs text-green-600">Entregue e lido</span> 
+                           <span className="text-xs text-green-600">Entregue e lido</span>
+                        )}
+                        {(envio.status === StatusEnvio.ENVIADO || envio.status === StatusEnvio.PENDENTE) &&
+                          (envio.quantidadeLembretes ?? 0) > 0 && (
+                            <span className="text-xs text-amber-600">
+                              {envio.quantidadeLembretes} lembrete{envio.quantidadeLembretes === 1 ? '' : 's'} enviado{envio.quantidadeLembretes === 1 ? '' : 's'}
+                            </span>
                         )}
                     </td>
                   </tr>

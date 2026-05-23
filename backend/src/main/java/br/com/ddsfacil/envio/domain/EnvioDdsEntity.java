@@ -73,6 +73,12 @@ public class EnvioDdsEntity {
     @Column(name = "erro_entrega", length = 500)
     private String erroEntrega;
 
+    @Column(name = "quantidade_lembretes", nullable = false)
+    private int quantidadeLembretes;
+
+    @Column(name = "momento_ultimo_lembrete")
+    private LocalDateTime momentoUltimoLembrete;
+
     public EnvioDdsEntity(
             FuncionarioEntity funcionarioEntity,
             ConteudoDdsEntity conteudo,
@@ -104,6 +110,11 @@ public class EnvioDdsEntity {
         this.status = StatusEnvioDds.ENVIADO;
         this.momentoEnvio = momento;
         this.erroEntrega = null;
+    }
+
+    public void registrarLembrete(LocalDateTime momento) {
+        this.quantidadeLembretes += 1;
+        this.momentoUltimoLembrete = momento;
     }
 
     public void registrarFalhaEntrega(String descricaoErro) {

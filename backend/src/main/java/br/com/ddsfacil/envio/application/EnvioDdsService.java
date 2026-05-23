@@ -160,7 +160,8 @@ public class EnvioDdsService {
                 envio.getDataEnvio(),
                 envio.getMomentoEnvio(),
                 envio.getMomentoConfirmacao(),
-                envio.getErroEntrega()
+                envio.getErroEntrega(),
+                envio.getQuantidadeLembretes()
         );
     }
 }

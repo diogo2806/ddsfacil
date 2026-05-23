@@ -44,6 +44,9 @@ public class EnvioDdsResponse {
     @Schema(description = "Descrição da falha de entrega, se houver")
     private final String mensagemErroEntrega;
 
+    @Schema(description = "Quantidade de lembretes automáticos já enviados", example = "1")
+    private final int quantidadeLembretes;
+
     public EnvioDdsResponse(
             Long id,
             Long funcionarioId,
@@ -55,7 +58,8 @@ public class EnvioDdsResponse {
             LocalDate dataEnvio,
             LocalDateTime momentoEnvio,
             LocalDateTime momentoConfirmacao,
-            String mensagemErroEntrega
+            String mensagemErroEntrega,
+            int quantidadeLembretes
     ) {
         this.id = id;
         this.funcionarioId = funcionarioId;
@@ -68,5 +72,6 @@ public class EnvioDdsResponse {
         this.momentoEnvio = momentoEnvio;
         this.momentoConfirmacao = momentoConfirmacao;
         this.mensagemErroEntrega = mensagemErroEntrega;
+        this.quantidadeLembretes = quantidadeLembretes;
     }
 }

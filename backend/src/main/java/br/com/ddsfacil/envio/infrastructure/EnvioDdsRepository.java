@@ -3,6 +3,7 @@ package br.com.ddsfacil.envio.infrastructure;
 import br.com.ddsfacil.envio.domain.EnvioDdsEntity;
 import br.com.ddsfacil.envio.domain.StatusEnvioDds;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -37,6 +38,18 @@ public interface EnvioDdsRepository extends JpaRepository<EnvioDdsEntity, Long> 
     );
 
     Optional<EnvioDdsEntity> findByTokenAcesso(String tokenAcesso);
+
+    @Query("""
+            select envio.id from EnvioDdsEntity envio
+            where envio.status = :status
+              and envio.quantidadeLembretes < :maximo
+              and coalesce(envio.momentoUltimoLembrete, envio.momentoEnvio) <= :limite
+            """)
+    List<Long> buscarIdsParaLembrete(
+            @Param("status") StatusEnvioDds status,
+            @Param("maximo") int maximo,
+            @Param("limite") LocalDateTime limite
+    );
 
     // --- ADICIONAR ESTE MÉTODO ---
     boolean existsByConteudoId(Long conteudoId);

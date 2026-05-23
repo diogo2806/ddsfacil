@@ -14,6 +14,7 @@ export type EnvioDds = {
   momentoEnvio: string;
   momentoConfirmacao: string | null;
   mensagemErroEntrega?: string | null; // <--- NOVO
+  quantidadeLembretes?: number;
 };
 export type CadastroEnvio = {
   conteudoId: number;

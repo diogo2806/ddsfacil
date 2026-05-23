@@ -37,6 +37,15 @@ public class LicencaService {
     }
 
     @Transactional(readOnly = true)
+    public boolean possuiCreditoParaEnvio(Long empresaId) {
+        return licencaRepository.buscarPorEmpresaId(empresaId)
+                .map(licenca -> licenca.pagamentoEmDia()
+                        && licenca.getSaldoSms() != null
+                        && licenca.getSaldoSms() > 0)
+                .orElse(false);
+    }
+
+    @Transactional(readOnly = true)
     public SaldoResponse consultarSaldo(Long empresaId) {
         return licencaRepository.buscarPorEmpresaId(empresaId)
                 .map(licenca -> new SaldoResponse(licenca.getSaldoSms(), licenca.getTipoPlano()))
