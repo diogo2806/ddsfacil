@@ -29,6 +29,7 @@ import AbaLocais from './abas/AbaLocais';
 import AbaRelatorios from './abas/AbaRelatorios';
 import AbaUsuarios from './abas/AbaUsuarios';
 import BadgeSaldo from '../../componentes/BadgeSaldo'; // Importe o componente
+import ModalAlterarSenha from '../../componentes/ModalAlterarSenha';
 
 type Notificacao = {
   tipo: TipoNotificacao;
@@ -47,6 +48,7 @@ export default function App() {
   const [abaAtiva, definirAbaAtiva] = useState<AbaPainel>(AbaPainel.DASHBOARD);
 
   const [notificacao, definirNotificacao] = useState<Notificacao | null>(null);
+  const [modalSenhaAberto, definirModalSenhaAberto] = useState<boolean>(false);
   const referenciaNotificacao = useRef<number>();
 
   const usuarioAutenticado = Boolean(sessaoUsuario);
@@ -145,6 +147,13 @@ export default function App() {
             </div>
             <button
               type="button"
+              onClick={() => definirModalSenhaAberto(true)}
+              className="hidden rounded-lg border border-gray-200 px-3 py-1 text-sm font-medium text-gray-700 transition hover:bg-gray-50 sm:inline-block"
+            >
+              Alterar senha
+            </button>
+            <button
+              type="button"
               onClick={encerrarSessao}
               className="rounded-lg border border-red-200 px-3 py-1 text-sm font-medium text-red-700 transition hover:bg-red-50"
             >
@@ -224,6 +233,13 @@ export default function App() {
           <AbaUsuarios exibirNotificacao={exibirNotificacao} />
         )}
       </main>
+
+      {modalSenhaAberto && (
+        <ModalAlterarSenha
+          aoFechar={() => definirModalSenhaAberto(false)}
+          exibirNotificacao={exibirNotificacao}
+        />
+      )}
 
       {notificacao && (
         <div

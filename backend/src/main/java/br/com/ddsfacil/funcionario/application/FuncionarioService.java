@@ -9,6 +9,7 @@ import br.com.ddsfacil.funcionario.infrastructure.FuncionarioRepository;
 import br.com.ddsfacil.funcionario.infrastructure.dto.FuncionarioRequest;
 import br.com.ddsfacil.funcionario.infrastructure.dto.FuncionarioResponse;
 import br.com.ddsfacil.funcionario.infrastructure.dto.ImportacaoFuncionariosResponse;
+import br.com.ddsfacil.envio.infrastructure.EnvioDdsRepository;
 import br.com.ddsfacil.local.domain.LocalTrabalho;
 import br.com.ddsfacil.local.infrastructure.LocalTrabalhoRepository;
 import java.io.BufferedReader;
@@ -36,10 +37,16 @@ public class FuncionarioService {
     private static final Logger log = LoggerFactory.getLogger(FuncionarioService.class);
     private final FuncionarioRepository funcionarioRepository;
     private final LocalTrabalhoRepository localTrabalhoRepository;
+    private final EnvioDdsRepository envioRepository;
 
-    public FuncionarioService(FuncionarioRepository funcionarioRepository, LocalTrabalhoRepository localTrabalhoRepository) {
+    public FuncionarioService(
+            FuncionarioRepository funcionarioRepository,
+            LocalTrabalhoRepository localTrabalhoRepository,
+            EnvioDdsRepository envioRepository
+    ) {
         this.funcionarioRepository = funcionarioRepository;
         this.localTrabalhoRepository = localTrabalhoRepository;
+        this.envioRepository = envioRepository;
     }
 
     @Transactional
@@ -167,7 +174,10 @@ public class FuncionarioService {
             log.warn("Funcionário ID: {} não encontrado para remoção.", id);
             throw new RecursoNaoEncontradoException("Funcionário não encontrado.");
         }
-        // NOTA: Adicionar verificação se funcionário possui envios antes de excluir
+        if (envioRepository.existsByFuncionarioEntityId(id)) {
+            throw new RegraNegocioException(
+                    "Não é possível remover: o funcionário possui histórico de envios de DDS (evidência de compliance).");
+        }
         funcionarioRepository.deleteById(id);
         log.info("Funcionário ID: {} removido com sucesso. (LGPD: Remoção de Dados Pessoais)", id);
     }

@@ -8,6 +8,7 @@ import br.com.ddsfacil.excecao.RegraNegocioException;
 import br.com.ddsfacil.usuario.domain.PerfilUsuario;
 import br.com.ddsfacil.usuario.domain.UsuarioEntity;
 import br.com.ddsfacil.usuario.infrastructure.UsuarioRepository;
+import br.com.ddsfacil.usuario.infrastructure.dto.AlterarSenhaRequest;
 import br.com.ddsfacil.usuario.infrastructure.dto.RedefinirSenhaRequest;
 import br.com.ddsfacil.usuario.infrastructure.dto.UsuarioAtualizacaoRequest;
 import br.com.ddsfacil.usuario.infrastructure.dto.UsuarioRequest;
@@ -86,6 +87,15 @@ public class UsuarioService {
     @Transactional
     public void redefinirSenha(Long id, RedefinirSenhaRequest requisicao) {
         UsuarioEntity usuario = buscarNaEmpresa(id);
+        usuario.redefinirSenha(passwordEncoder.encode(requisicao.getNovaSenha()));
+    }
+
+    @Transactional
+    public void alterarMinhaSenha(Long usuarioId, AlterarSenhaRequest requisicao) {
+        UsuarioEntity usuario = buscarNaEmpresa(usuarioId);
+        if (!passwordEncoder.matches(requisicao.getSenhaAtual(), usuario.getSenhaHash())) {
+            throw new RegraNegocioException("Senha atual incorreta.");
+        }
         usuario.redefinirSenha(passwordEncoder.encode(requisicao.getNovaSenha()));
     }
 

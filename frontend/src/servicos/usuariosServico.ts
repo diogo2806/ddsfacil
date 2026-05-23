@@ -42,3 +42,7 @@ export async function atualizarUsuario(id: number, dados: AtualizacaoUsuario): P
 export async function redefinirSenhaUsuario(id: number, novaSenha: string): Promise<void> {
   await clienteHttp.put(`/api/usuarios/${id}/senha`, { novaSenha });
 }
+
+export async function alterarMinhaSenha(senhaAtual: string, novaSenha: string): Promise<void> {
+  await clienteHttp.put('/api/minha-conta/senha', { senhaAtual, novaSenha });
+}
