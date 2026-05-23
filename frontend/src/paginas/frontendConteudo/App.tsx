@@ -26,7 +26,10 @@ import AbaConteudos from './abas/AbaConteudos';
 // [NOVOS IMPORTS]
 import AbaTiposLocal from './abas/AbaTiposLocal';
 import AbaLocais from './abas/AbaLocais';
+import AbaRelatorios from './abas/AbaRelatorios';
+import AbaUsuarios from './abas/AbaUsuarios';
 import BadgeSaldo from '../../componentes/BadgeSaldo'; // Importe o componente
+import ModalAlterarSenha from '../../componentes/ModalAlterarSenha';
 
 type Notificacao = {
   tipo: TipoNotificacao;
@@ -45,6 +48,7 @@ export default function App() {
   const [abaAtiva, definirAbaAtiva] = useState<AbaPainel>(AbaPainel.DASHBOARD);
 
   const [notificacao, definirNotificacao] = useState<Notificacao | null>(null);
+  const [modalSenhaAberto, definirModalSenhaAberto] = useState<boolean>(false);
   const referenciaNotificacao = useRef<number>();
 
   const usuarioAutenticado = Boolean(sessaoUsuario);
@@ -121,6 +125,9 @@ export default function App() {
   }
 
   const nomeUsuarioLogado = sessaoUsuario?.nomeUsuario ?? 'Usuário';
+  const perfilUsuario = sessaoUsuario?.perfil ?? '';
+  const podeGerenciar = perfilUsuario === 'ADMIN' || perfilUsuario === 'GESTOR';
+  const ehAdmin = perfilUsuario === 'ADMIN';
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -138,6 +145,13 @@ export default function App() {
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-700">
               {obterIniciaisUsuario(nomeUsuarioLogado)}
             </div>
+            <button
+              type="button"
+              onClick={() => definirModalSenhaAberto(true)}
+              className="hidden rounded-lg border border-gray-200 px-3 py-1 text-sm font-medium text-gray-700 transition hover:bg-gray-50 sm:inline-block"
+            >
+              Alterar senha
+            </button>
             <button
               type="button"
               onClick={encerrarSessao}
@@ -172,6 +186,16 @@ export default function App() {
             <BotaoAba ativo={abaAtiva === AbaPainel.LOCAIS} onClick={() => definirAbaAtiva(AbaPainel.LOCAIS)}>
               Locais
             </BotaoAba>
+            {podeGerenciar && (
+              <BotaoAba ativo={abaAtiva === AbaPainel.RELATORIOS} onClick={() => definirAbaAtiva(AbaPainel.RELATORIOS)}>
+                Relatórios
+              </BotaoAba>
+            )}
+            {ehAdmin && (
+              <BotaoAba ativo={abaAtiva === AbaPainel.USUARIOS} onClick={() => definirAbaAtiva(AbaPainel.USUARIOS)}>
+                Usuários
+              </BotaoAba>
+            )}
           </div>
         </div>
       </header>
@@ -200,7 +224,22 @@ export default function App() {
         {abaAtiva === AbaPainel.LOCAIS && (
           <AbaLocais exibirNotificacao={exibirNotificacao} />
         )}
+
+        {abaAtiva === AbaPainel.RELATORIOS && podeGerenciar && (
+          <AbaRelatorios exibirNotificacao={exibirNotificacao} />
+        )}
+
+        {abaAtiva === AbaPainel.USUARIOS && ehAdmin && (
+          <AbaUsuarios exibirNotificacao={exibirNotificacao} />
+        )}
       </main>
+
+      {modalSenhaAberto && (
+        <ModalAlterarSenha
+          aoFechar={() => definirModalSenhaAberto(false)}
+          exibirNotificacao={exibirNotificacao}
+        />
+      )}
 
       {notificacao && (
         <div

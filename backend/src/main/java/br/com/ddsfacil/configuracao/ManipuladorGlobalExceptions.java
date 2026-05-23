@@ -7,6 +7,7 @@ import java.util.Map;
 import br.com.ddsfacil.excecao.RegraNegocioException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -36,5 +37,12 @@ public class ManipuladorGlobalExceptions {
         Map<String, String> resposta = new HashMap<>();
         resposta.put("mensagem", ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(resposta);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> tratarAcessoNegado(AccessDeniedException ex) {
+        Map<String, String> resposta = new HashMap<>();
+        resposta.put("mensagem", "Você não tem permissão para executar esta ação.");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(resposta);
     }
 }

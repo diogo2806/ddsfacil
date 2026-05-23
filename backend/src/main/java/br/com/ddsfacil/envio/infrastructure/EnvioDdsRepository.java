@@ -40,4 +40,6 @@ public interface EnvioDdsRepository extends JpaRepository<EnvioDdsEntity, Long> 
 
     // --- ADICIONAR ESTE MÉTODO ---
     boolean existsByConteudoId(Long conteudoId);
+
+    boolean existsByFuncionarioEntityId(Long funcionarioId);
 }

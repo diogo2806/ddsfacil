@@ -33,11 +33,8 @@ export default function AbaEnviarDds({ exibirNotificacao }: Props) {
       definirDataEnvio(dataAtual());
       definirMensagemSelecao('');
     },
-    onErrorSave: () => {
-      exibirNotificacao({
-        tipo: TipoNotificacao.ERRO,
-        mensagem: 'Não foi possível criar o envio. Tente novamente.',
-      });
+    onErrorSave: (mensagem) => {
+      exibirNotificacao({ tipo: TipoNotificacao.ERRO, mensagem });
     },
   });
 

@@ -77,4 +77,14 @@ public class UsuarioEntity {
         this.senhaHash = senhaHash;
         this.ativo = true;
     }
+
+    public void atualizarPerfilEStatus(String nome, PerfilUsuario perfil, boolean ativo) {
+        this.nome = nome;
+        this.perfil = perfil;
+        this.ativo = ativo;
+    }
+
+    public void redefinirSenha(String senhaHash) {
+        this.senhaHash = senhaHash;
+    }
 }

@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,6 +32,7 @@ public class LocalTrabalhoController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Cadastra um novo local de trabalho")
     public LocalTrabalhoResponse criar(@Valid @RequestBody LocalTrabalhoRequest requisicao) {
@@ -38,12 +40,14 @@ public class LocalTrabalhoController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
     @Operation(summary = "Atualiza um local de trabalho existente")
     public LocalTrabalhoResponse atualizar(@PathVariable Long id, @Valid @RequestBody LocalTrabalhoRequest requisicao) {
         return localTrabalhoService.atualizar(id, requisicao);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Remove um local de trabalho pelo ID")
     public void remover(@PathVariable Long id) {

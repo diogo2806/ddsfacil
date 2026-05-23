@@ -14,6 +14,8 @@ export enum AbaPainel {
   CONTEUDO = 'CONTEUDO',
   TIPOS_LOCAL = 'TIPOS_LOCAL',
   LOCAIS = 'LOCAIS',
+  RELATORIOS = 'RELATORIOS',
+  USUARIOS = 'USUARIOS',
 }
 
 export enum TipoNotificacao {

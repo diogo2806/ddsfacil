@@ -40,6 +40,26 @@ export async function criarFuncionario(dados: CadastroFuncionario): Promise<Func
   return resposta.data;
 }
 
+export async function atualizarFuncionario(id: number, dados: CadastroFuncionario): Promise<Funcionario> {
+  const resposta = await clienteHttp.put<Funcionario>(`/api/funcionarios/${id}`, dados);
+  return resposta.data;
+}
+
 export async function removerFuncionario(id: number): Promise<void> {
   await clienteHttp.delete(`/api/funcionarios/${id}`);
+}
+
+export type ResultadoImportacao = {
+  totalLinhas: number;
+  importados: number;
+  erros: { linha: number; motivo: string }[];
+};
+
+export async function importarFuncionarios(arquivo: File): Promise<ResultadoImportacao> {
+  const form = new FormData();
+  form.append('file', arquivo, arquivo.name);
+  const resposta = await clienteHttp.post<ResultadoImportacao>('/api/funcionarios/importar', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return resposta.data;
 }

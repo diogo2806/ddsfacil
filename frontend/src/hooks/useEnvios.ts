@@ -4,8 +4,13 @@ import { CadastroEnvio, EnvioDds, criarEnvios, listarEnviosPorData } from '../se
 type UseEnviosOptions = {
   enabled?: boolean;
   onSuccessSave?: () => void;
-  onErrorSave?: () => void;
+  onErrorSave?: (mensagem: string) => void;
 };
+
+function extrairMensagem(erro: unknown, padrao: string): string {
+  const dados = (erro as { response?: { data?: { mensagem?: string } } })?.response?.data;
+  return dados?.mensagem ?? padrao;
+}
 
 export function useEnvios(options: UseEnviosOptions = {}) {
   const clienteConsulta = useQueryClient();
@@ -23,7 +28,8 @@ export function useEnvios(options: UseEnviosOptions = {}) {
       clienteConsulta.invalidateQueries({ queryKey: ['saldo-sms'] }); // <--- LINHA ADICIONADA
       options.onSuccessSave?.();
     },
-    onError: () => options.onErrorSave?.(),
+    onError: (erro) =>
+      options.onErrorSave?.(extrairMensagem(erro, 'Não foi possível criar o envio. Tente novamente.')),
   });
 
   return {
