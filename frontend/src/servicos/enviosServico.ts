@@ -2,6 +2,8 @@
 import { clienteHttp } from './clienteHttp';
 import { StatusEnvio } from '../types/enums';
 
+export type CanalMensagem = 'SMS' | 'WHATSAPP';
+
 export type EnvioDds = {
   id: number;
   funcionarioId: number;
@@ -16,12 +18,14 @@ export type EnvioDds = {
   mensagemErroEntrega?: string | null; // <--- NOVO
   quantidadeLembretes?: number;
   momentoAgendado?: string | null;
+  canal?: CanalMensagem;
 };
 export type CadastroEnvio = {
   conteudoId: number;
   funcionariosIds: number[];
   dataEnvio?: string;
   agendarPara?: string;
+  canal?: CanalMensagem;
 };
 export async function listarEnviosPorData(data?: string): Promise<EnvioDds[]> {
   const resposta = await clienteHttp.get<EnvioDds[]>('/api/envios', {

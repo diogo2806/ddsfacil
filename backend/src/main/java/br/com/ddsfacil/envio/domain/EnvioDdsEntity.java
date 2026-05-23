@@ -82,6 +82,10 @@ public class EnvioDdsEntity {
     @Column(name = "momento_agendado")
     private LocalDateTime momentoAgendado;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "canal", nullable = false, length = 20)
+    private CanalMensagem canal;
+
     public EnvioDdsEntity(
             FuncionarioEntity funcionarioEntity,
             ConteudoDdsEntity conteudo,
@@ -96,6 +100,13 @@ public class EnvioDdsEntity {
         this.status = StatusEnvioDds.PENDENTE;
         this.tokenAcesso = gerarToken();
         this.empresaId = empresaId;
+        this.canal = CanalMensagem.SMS;
+    }
+
+    public void definirCanal(CanalMensagem canal) {
+        if (canal != null) {
+            this.canal = canal;
+        }
     }
 
     public void confirmar(LocalDateTime momento) {

@@ -4,6 +4,7 @@ package br.com.ddsfacil.envio.application;
 import br.com.ddsfacil.configuracao.multitenant.ContextoEmpresa;
 import br.com.ddsfacil.conteudo.domain.ConteudoDdsEntity;
 import br.com.ddsfacil.conteudo.infrastructure.ConteudoDdsRepository;
+import br.com.ddsfacil.envio.domain.CanalMensagem;
 import br.com.ddsfacil.envio.domain.EnvioDdsEntity;
 import br.com.ddsfacil.envio.domain.StatusEnvioDds;
 import br.com.ddsfacil.envio.infrastructure.EnvioDdsRepository;
@@ -81,6 +82,7 @@ public class EnvioDdsService {
         LocalDateTime agora = LocalDateTime.now();
         LocalDateTime momentoAgendado = requisicao.getAgendarPara();
         boolean agendado = momentoAgendado != null && momentoAgendado.isAfter(agora);
+        CanalMensagem canal = requisicao.getCanal() == null ? CanalMensagem.SMS : requisicao.getCanal();
 
         LocalDate dataEnvio;
         if (agendado) {
@@ -111,6 +113,7 @@ public class EnvioDdsService {
             }
             LocalDateTime momentoEnvio = agendado ? momentoAgendado : agora;
             EnvioDdsEntity envio = new EnvioDdsEntity(funcionarioEntity, conteudo, dataEnvio, momentoEnvio, empresaId);
+            envio.definirCanal(canal);
             if (agendado) {
                 envio.definirAgendamento(momentoAgendado);
             }
@@ -122,7 +125,7 @@ public class EnvioDdsService {
             return List.of();
         }
 
-        licencaService.debitarSms(empresaId, novosEnvios.size());
+        licencaService.debitar(empresaId, canal, novosEnvios.size());
         List<EnvioDdsEntity> salvos = envioRepositorio.saveAll(novosEnvios);
         if (agendado) {
             Instant instante = momentoAgendado.atZone(ZoneId.systemDefault()).toInstant();
@@ -190,7 +193,8 @@ public class EnvioDdsService {
                 envio.getMomentoConfirmacao(),
                 envio.getErroEntrega(),
                 envio.getQuantidadeLembretes(),
-                envio.getMomentoAgendado()
+                envio.getMomentoAgendado(),
+                envio.getCanal()
         );
     }
 }

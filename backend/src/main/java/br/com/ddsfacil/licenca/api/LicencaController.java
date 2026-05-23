@@ -1,6 +1,7 @@
 package br.com.ddsfacil.licenca.api;
 
 import br.com.ddsfacil.configuracao.multitenant.ContextoEmpresa;
+import br.com.ddsfacil.envio.domain.CanalMensagem;
 import br.com.ddsfacil.licenca.application.LicencaService;
 import br.com.ddsfacil.licenca.infrastructure.dto.AtualizarLicencaRequest;
 import br.com.ddsfacil.licenca.infrastructure.dto.LicencaResponse;
@@ -50,7 +51,8 @@ public class LicencaController {
     @Operation(summary = "Recarga manual de créditos de SMS (gerenciada pelo administrador)")
     public ResponseEntity<LicencaResponse> recarregar(@Valid @RequestBody RecargaRequest requisicao) {
         Long empresaId = ContextoEmpresa.obterEmpresaIdObrigatorio();
-        return ResponseEntity.ok(licencaService.recarregarManual(empresaId, requisicao.getQuantidade()));
+        CanalMensagem canal = requisicao.getCanal() == null ? CanalMensagem.SMS : requisicao.getCanal();
+        return ResponseEntity.ok(licencaService.recarregarManual(empresaId, canal, requisicao.getQuantidade()));
     }
 
     @PutMapping

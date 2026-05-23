@@ -4,8 +4,8 @@ import br.com.ddsfacil.envio.domain.EnvioDdsEntity;
 import br.com.ddsfacil.envio.infrastructure.EnvioDdsRepository;
 import br.com.ddsfacil.envio.domain.StatusEnvioDds;
 import br.com.ddsfacil.envio.infrastructure.lembrete.LembretePropriedades;
+import br.com.ddsfacil.integracao.mensageria.ServicoMensageria;
 import br.com.ddsfacil.integracao.sms.IntegracaoSmsPropriedades;
-import br.com.ddsfacil.integracao.sms.ServicoSms;
 import br.com.ddsfacil.licenca.application.LicencaService;
 import java.time.LocalDateTime;
 import org.jsoup.Jsoup;
@@ -23,20 +23,20 @@ public class EnvioSmsProcessadorDeJobs {
     private static final Logger LOGGER = LoggerFactory.getLogger(EnvioSmsProcessadorDeJobs.class);
 
     private final EnvioDdsRepository envioRepositorio;
-    private final ServicoSms servicoSms;
+    private final ServicoMensageria servicoMensageria;
     private final IntegracaoSmsPropriedades propriedades;
     private final LicencaService licencaService;
     private final LembretePropriedades lembretePropriedades;
 
     public EnvioSmsProcessadorDeJobs(
             EnvioDdsRepository envioRepositorio,
-            ServicoSms servicoSms,
+            ServicoMensageria servicoMensageria,
             IntegracaoSmsPropriedades propriedades,
             LicencaService licencaService,
             LembretePropriedades lembretePropriedades
     ) {
         this.envioRepositorio = envioRepositorio;
-        this.servicoSms = servicoSms;
+        this.servicoMensageria = servicoMensageria;
         this.propriedades = propriedades;
         this.licencaService = licencaService;
         this.lembretePropriedades = lembretePropriedades;
@@ -83,11 +83,11 @@ public class EnvioSmsProcessadorDeJobs {
             if (envio.getQuantidadeLembretes() >= lembretePropriedades.getMaximoLembretes()) {
                 return;
             }
-            if (!licencaService.possuiCreditoParaEnvio(envio.getEmpresaId())) {
+            if (!licencaService.possuiCreditoParaEnvio(envio.getEmpresaId(), envio.getCanal())) {
                 LOGGER.info("Sem saldo/licença válida para lembrete do envio {}.", envioId);
                 return;
             }
-            licencaService.debitarSms(envio.getEmpresaId(), 1);
+            licencaService.debitar(envio.getEmpresaId(), envio.getCanal(), 1);
             String urlBase = normalizarUrlBase(propriedades.getUrlBaseConfirmacao());
             enviarLembrete(envio, urlBase);
             envio.registrarLembrete(LocalDateTime.now());
@@ -104,8 +104,8 @@ public class EnvioSmsProcessadorDeJobs {
         String titulo = Jsoup.clean(envio.getConteudo().getTitulo(), Safelist.none()).strip();
         String linkConfirmacao = urlBase + envio.getTokenAcesso();
         String mensagem = "Lembrete DDS: " + titulo + ". Você ainda não confirmou. Leia e confirme: " + linkConfirmacao;
-        servicoSms.enviarMensagem(numeroDestino, mensagem, envio.getId());
-        LOGGER.info("Lembrete de SMS enviado para o envio {} (lembrete #{}).", envio.getId(), envio.getQuantidadeLembretes() + 1);
+        servicoMensageria.enviarMensagem(envio.getCanal(), numeroDestino, mensagem, envio.getId());
+        LOGGER.info("Lembrete enviado para o envio {} via {} (lembrete #{}).", envio.getId(), envio.getCanal(), envio.getQuantidadeLembretes() + 1);
     }
 
     private void enviarSms(EnvioDdsEntity envio, String urlBase) {
@@ -113,21 +113,21 @@ public class EnvioSmsProcessadorDeJobs {
             String numeroDestino = sanitizarNumero(envio.getFuncionarioEntity().getCelular());
             if (!StringUtils.hasText(numeroDestino)) {
                 LOGGER.warn("Número de telefone inválido para o funcionário {}.", envio.getFuncionarioEntity().getId());
-                envio.registrarFalhaEntrega("Número de celular inválido para envio de SMS.");
+                envio.registrarFalhaEntrega("Número de celular inválido para envio da mensagem.");
                 envioRepositorio.save(envio);
                 return;
             }
             String titulo = Jsoup.clean(envio.getConteudo().getTitulo(), Safelist.none()).strip();
             String linkConfirmacao = urlBase + envio.getTokenAcesso();
             String mensagem = "DDS: " + titulo + ". Leia e confirme: " + linkConfirmacao;
-            servicoSms.enviarMensagem(numeroDestino, mensagem, envio.getId());
+            servicoMensageria.enviarMensagem(envio.getCanal(), numeroDestino, mensagem, envio.getId());
             envio.marcarComoEnviado(LocalDateTime.now());
             envioRepositorio.save(envio);
-            LOGGER.info("SMS enviado para o envio {}.", envio.getId());
+            LOGGER.info("Mensagem enviada para o envio {} via {}.", envio.getId(), envio.getCanal());
         } catch (Exception ex) {
-            envio.registrarFalhaEntrega("Erro no envio do SMS: " + ex.getMessage());
+            envio.registrarFalhaEntrega("Erro no envio da mensagem: " + ex.getMessage());
             envioRepositorio.save(envio);
-            LOGGER.error("Erro ao enviar SMS para o envio {}.", envio.getId(), ex);
+            LOGGER.error("Erro ao enviar mensagem para o envio {}.", envio.getId(), ex);
         }
     }
 

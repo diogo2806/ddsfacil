@@ -1,6 +1,7 @@
 // Arquivo: backend/src/main/java/br/com/ddsfacil/envio/infrastructure/dto/EnvioDdsResponse.java
 package br.com.ddsfacil.envio.infrastructure.dto;
 
+import br.com.ddsfacil.envio.domain.CanalMensagem;
 import br.com.ddsfacil.envio.domain.StatusEnvioDds;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
@@ -50,6 +51,9 @@ public class EnvioDdsResponse {
     @Schema(description = "Momento para o qual o envio foi agendado, se aplicável")
     private final LocalDateTime momentoAgendado;
 
+    @Schema(description = "Canal de envio", example = "SMS")
+    private final CanalMensagem canal;
+
     public EnvioDdsResponse(
             Long id,
             Long funcionarioId,
@@ -63,7 +67,8 @@ public class EnvioDdsResponse {
             LocalDateTime momentoConfirmacao,
             String mensagemErroEntrega,
             int quantidadeLembretes,
-            LocalDateTime momentoAgendado
+            LocalDateTime momentoAgendado,
+            CanalMensagem canal
     ) {
         this.id = id;
         this.funcionarioId = funcionarioId;
@@ -78,5 +83,6 @@ public class EnvioDdsResponse {
         this.mensagemErroEntrega = mensagemErroEntrega;
         this.quantidadeLembretes = quantidadeLembretes;
         this.momentoAgendado = momentoAgendado;
+        this.canal = canal;
     }
 }

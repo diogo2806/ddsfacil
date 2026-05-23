@@ -15,6 +15,7 @@ type Props = {
 
 export default function AbaEnviarDds({ exibirNotificacao }: Props) {
   const [conteudoId, definirConteudoId] = useState<string>('');
+  const [canal, definirCanal] = useState<'SMS' | 'WHATSAPP'>('SMS');
   const [dataEnvio, definirDataEnvio] = useState<string>(dataAtual());
   const [agendarPara, definirAgendarPara] = useState<string>('');
   const [funcionariosSelecionados, definirFuncionariosSelecionados] = useState<number[]>([]);
@@ -31,6 +32,7 @@ export default function AbaEnviarDds({ exibirNotificacao }: Props) {
       exibirNotificacao({ tipo: TipoNotificacao.SUCESSO, mensagem: 'Envio criado com sucesso.' });
       definirFuncionariosSelecionados([]);
       definirConteudoId('');
+      definirCanal('SMS');
       definirDataEnvio(dataAtual());
       definirAgendarPara('');
       definirMensagemSelecao('');
@@ -204,6 +206,7 @@ export default function AbaEnviarDds({ exibirNotificacao }: Props) {
       funcionariosIds: funcionariosSelecionados,
       dataEnvio: dataLimpa || undefined,
       agendarPara: agendamentoLimpo || undefined,
+      canal,
     });
   }
 
@@ -234,6 +237,22 @@ export default function AbaEnviarDds({ exibirNotificacao }: Props) {
           {consultaConteudos.isError && (
             <p className="text-sm text-red-600">Não foi possível carregar os conteúdos. Tente novamente.</p>
           )}
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="canal" className="text-sm font-medium text-gray-700">
+            Canal de envio
+          </label>
+          <select
+            id="canal"
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+            value={canal}
+            onChange={(evento) => definirCanal(evento.target.value as 'SMS' | 'WHATSAPP')}
+          >
+            <option value="SMS">SMS</option>
+            <option value="WHATSAPP">WhatsApp</option>
+          </select>
+          <p className="text-xs text-gray-500">O crédito é debitado do saldo do canal escolhido.</p>
         </div>
 
         <div className="space-y-2">

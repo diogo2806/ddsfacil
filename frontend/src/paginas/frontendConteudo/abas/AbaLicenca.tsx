@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   AtualizacaoLicenca,
+  CanalMensagem,
   Licenca,
   StatusPagamento,
   atualizarLicenca,
@@ -30,6 +31,7 @@ function extrairMensagem(erro: unknown, padrao: string): string {
 export default function AbaLicenca({ exibirNotificacao }: Props) {
   const clienteConsulta = useQueryClient();
   const [quantidade, definirQuantidade] = useState<string>('100');
+  const [canalRecarga, definirCanalRecarga] = useState<CanalMensagem>('SMS');
   const [tipoPlano, definirTipoPlano] = useState<string>('');
   const [statusPagamento, definirStatusPagamento] = useState<StatusPagamento>('EM_DIA');
   const [dataRenovacao, definirDataRenovacao] = useState<string>('');
@@ -53,7 +55,7 @@ export default function AbaLicenca({ exibirNotificacao }: Props) {
   }
 
   const mutacaoRecarga = useMutation({
-    mutationFn: (qtd: number) => recarregarCreditos(qtd),
+    mutationFn: ({ qtd, canal }: { qtd: number; canal: CanalMensagem }) => recarregarCreditos(qtd, canal),
     onSuccess: () => {
       invalidar();
       exibirNotificacao({ tipo: TipoNotificacao.SUCESSO, mensagem: 'Créditos adicionados com sucesso.' });
@@ -94,7 +96,7 @@ export default function AbaLicenca({ exibirNotificacao }: Props) {
       exibirNotificacao({ tipo: TipoNotificacao.ERRO, mensagem: 'Informe uma quantidade válida (mínimo 1).' });
       return;
     }
-    mutacaoRecarga.mutate(qtd);
+    mutacaoRecarga.mutate({ qtd, canal: canalRecarga });
   }
 
   function aoAtualizar(evento: FormEvent<HTMLFormElement>) {
@@ -124,9 +126,10 @@ export default function AbaLicenca({ exibirNotificacao }: Props) {
     <div className="grid gap-6 md:grid-cols-2">
       <section className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm md:col-span-2">
         <h3 className="text-lg font-semibold text-gray-900">Resumo da licença</h3>
-        <div className="grid gap-4 sm:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-5">
           <Indicador titulo="Plano" valor={licenca?.tipoPlano ?? '-'} />
           <Indicador titulo="Saldo de SMS" valor={String(licenca?.saldoSms ?? 0)} destaque />
+          <Indicador titulo="Saldo de WhatsApp" valor={String(licenca?.saldoWhatsapp ?? 0)} />
           <Indicador
             titulo="Status de pagamento"
             valor={licenca ? ROTULO_STATUS[licenca.statusPagamento] : '-'}
@@ -139,6 +142,20 @@ export default function AbaLicenca({ exibirNotificacao }: Props) {
       <section className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
         <h3 className="text-lg font-semibold text-gray-900">Recarregar créditos (manual)</h3>
         <form className="space-y-4" onSubmit={aoRecarregar}>
+          <div className="space-y-2">
+            <label htmlFor="recarga-canal" className="text-sm font-medium text-gray-700">
+              Canal
+            </label>
+            <select
+              id="recarga-canal"
+              value={canalRecarga}
+              onChange={(evento) => definirCanalRecarga(evento.target.value as CanalMensagem)}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
+            >
+              <option value="SMS">SMS</option>
+              <option value="WHATSAPP">WhatsApp</option>
+            </select>
+          </div>
           <div className="space-y-2">
             <label htmlFor="recarga-qtd" className="text-sm font-medium text-gray-700">
               Quantidade de créditos

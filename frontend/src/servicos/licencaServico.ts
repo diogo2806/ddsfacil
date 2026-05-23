@@ -1,5 +1,7 @@
 import { clienteHttp } from './clienteHttp';
 
+export type CanalMensagem = 'SMS' | 'WHATSAPP';
+
 export type SaldoResponse = {
   saldoSms: number;
   plano: string;
@@ -38,8 +40,8 @@ export async function detalharLicenca(): Promise<Licenca> {
   return resposta.data;
 }
 
-export async function recarregarCreditos(quantidade: number): Promise<Licenca> {
-  const resposta = await clienteHttp.post<Licenca>('/api/licencas/recarga', { quantidade });
+export async function recarregarCreditos(quantidade: number, canal: CanalMensagem = 'SMS'): Promise<Licenca> {
+  const resposta = await clienteHttp.post<Licenca>('/api/licencas/recarga', { quantidade, canal });
   return resposta.data;
 }
 

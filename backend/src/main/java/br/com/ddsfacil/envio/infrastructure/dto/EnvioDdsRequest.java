@@ -1,6 +1,7 @@
 // Arquivo: backend/src/main/java/br/com/ddsfacil/envio/infrastructure/dto/EnvioDdsRequest.java
 package br.com.ddsfacil.envio.infrastructure.dto;
 
+import br.com.ddsfacil.envio.domain.CanalMensagem;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -33,4 +34,7 @@ public class EnvioDdsRequest {
             example = "2025-11-05T07:00:00"
     )
     private LocalDateTime agendarPara;
+
+    @Schema(description = "Canal de envio (SMS ou WHATSAPP). Padrão: SMS.", example = "SMS")
+    private CanalMensagem canal;
 }
