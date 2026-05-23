@@ -28,6 +28,7 @@ import AbaTiposLocal from './abas/AbaTiposLocal';
 import AbaLocais from './abas/AbaLocais';
 import AbaRelatorios from './abas/AbaRelatorios';
 import AbaUsuarios from './abas/AbaUsuarios';
+import AbaLicenca from './abas/AbaLicenca';
 import BadgeSaldo from '../../componentes/BadgeSaldo'; // Importe o componente
 import ModalAlterarSenha from '../../componentes/ModalAlterarSenha';
 
@@ -196,6 +197,11 @@ export default function App() {
                 Usuários
               </BotaoAba>
             )}
+            {ehAdmin && (
+              <BotaoAba ativo={abaAtiva === AbaPainel.LICENCA} onClick={() => definirAbaAtiva(AbaPainel.LICENCA)}>
+                Plano
+              </BotaoAba>
+            )}
           </div>
         </div>
       </header>
@@ -231,6 +237,10 @@ export default function App() {
 
         {abaAtiva === AbaPainel.USUARIOS && ehAdmin && (
           <AbaUsuarios exibirNotificacao={exibirNotificacao} />
+        )}
+
+        {abaAtiva === AbaPainel.LICENCA && ehAdmin && (
+          <AbaLicenca exibirNotificacao={exibirNotificacao} />
         )}
       </main>
 
