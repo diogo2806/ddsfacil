@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,6 +42,7 @@ public class FuncionarioController {
     // O frontend deve agora chamar GET /api/locais-trabalho e GET /api/tipos-local
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Cadastra um novo funcionário")
     public FuncionarioResponse criar(@Valid @RequestBody FuncionarioRequest requisicao) {
@@ -48,6 +50,7 @@ public class FuncionarioController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Remove um funcionário pelo ID")
     public void remover(@PathVariable Long id) {

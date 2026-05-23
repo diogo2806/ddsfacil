@@ -26,6 +26,8 @@ import AbaConteudos from './abas/AbaConteudos';
 // [NOVOS IMPORTS]
 import AbaTiposLocal from './abas/AbaTiposLocal';
 import AbaLocais from './abas/AbaLocais';
+import AbaRelatorios from './abas/AbaRelatorios';
+import AbaUsuarios from './abas/AbaUsuarios';
 import BadgeSaldo from '../../componentes/BadgeSaldo'; // Importe o componente
 
 type Notificacao = {
@@ -121,6 +123,9 @@ export default function App() {
   }
 
   const nomeUsuarioLogado = sessaoUsuario?.nomeUsuario ?? 'Usuário';
+  const perfilUsuario = sessaoUsuario?.perfil ?? '';
+  const podeGerenciar = perfilUsuario === 'ADMIN' || perfilUsuario === 'GESTOR';
+  const ehAdmin = perfilUsuario === 'ADMIN';
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -172,6 +177,16 @@ export default function App() {
             <BotaoAba ativo={abaAtiva === AbaPainel.LOCAIS} onClick={() => definirAbaAtiva(AbaPainel.LOCAIS)}>
               Locais
             </BotaoAba>
+            {podeGerenciar && (
+              <BotaoAba ativo={abaAtiva === AbaPainel.RELATORIOS} onClick={() => definirAbaAtiva(AbaPainel.RELATORIOS)}>
+                Relatórios
+              </BotaoAba>
+            )}
+            {ehAdmin && (
+              <BotaoAba ativo={abaAtiva === AbaPainel.USUARIOS} onClick={() => definirAbaAtiva(AbaPainel.USUARIOS)}>
+                Usuários
+              </BotaoAba>
+            )}
           </div>
         </div>
       </header>
@@ -199,6 +214,14 @@ export default function App() {
 
         {abaAtiva === AbaPainel.LOCAIS && (
           <AbaLocais exibirNotificacao={exibirNotificacao} />
+        )}
+
+        {abaAtiva === AbaPainel.RELATORIOS && podeGerenciar && (
+          <AbaRelatorios exibirNotificacao={exibirNotificacao} />
+        )}
+
+        {abaAtiva === AbaPainel.USUARIOS && ehAdmin && (
+          <AbaUsuarios exibirNotificacao={exibirNotificacao} />
         )}
       </main>
 

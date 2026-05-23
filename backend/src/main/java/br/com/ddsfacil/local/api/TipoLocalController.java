@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -58,6 +59,7 @@ public class TipoLocalController {
      * [NOVO] Endpoint de criação
      */
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Cria um novo tipo de local")
     public TipoLocalResponse criar(@Valid @RequestBody TipoLocalRequest request) {
@@ -68,6 +70,7 @@ public class TipoLocalController {
      * [NOVO] Endpoint de atualização
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
     @Operation(summary = "Atualiza um tipo de local existente")
     public TipoLocalResponse atualizar(@PathVariable Long id, @Valid @RequestBody TipoLocalRequest request) {
         return tipoLocalService.atualizar(id, request);
@@ -77,6 +80,7 @@ public class TipoLocalController {
      * [NOVO] Endpoint de exclusão
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Remove um tipo de local")
     public void remover(@PathVariable Long id) {

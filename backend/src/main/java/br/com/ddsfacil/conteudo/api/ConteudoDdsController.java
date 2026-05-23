@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
@@ -46,6 +47,7 @@ public class ConteudoDdsController {
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Cria um novo conteúdo de DDS (via JSON, para Texto ou Link)")
     public ConteudoDdsResponse criar(@Valid @RequestBody ConteudoDdsRequest requisicao) {
@@ -53,6 +55,7 @@ public class ConteudoDdsController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Exclui um conteúdo de DDS pelo ID")
     public void excluir(@PathVariable Long id) {
@@ -76,6 +79,7 @@ public class ConteudoDdsController {
     }
 
     @PostMapping(path = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyRole('ADMIN','GESTOR')")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Cria um novo conteúdo de DDS (via Multipart-Form, para upload de Arquivo)")
     public ConteudoDdsResponse uploadArquivo(
