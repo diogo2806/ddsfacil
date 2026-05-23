@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,4 +27,10 @@ public class EnvioDdsRequest {
 
     @Schema(description = "Data do envio (opcional, padrão: data atual)", example = "2025-11-04")
     private LocalDate dataEnvio;
+
+    @Schema(
+            description = "Momento para agendar o envio (opcional). Se informado e futuro, o DDS é programado para esta data/hora.",
+            example = "2025-11-05T07:00:00"
+    )
+    private LocalDateTime agendarPara;
 }

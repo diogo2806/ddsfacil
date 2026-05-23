@@ -15,11 +15,13 @@ export type EnvioDds = {
   momentoConfirmacao: string | null;
   mensagemErroEntrega?: string | null; // <--- NOVO
   quantidadeLembretes?: number;
+  momentoAgendado?: string | null;
 };
 export type CadastroEnvio = {
   conteudoId: number;
   funcionariosIds: number[];
   dataEnvio?: string;
+  agendarPara?: string;
 };
 export async function listarEnviosPorData(data?: string): Promise<EnvioDds[]> {
   const resposta = await clienteHttp.get<EnvioDds[]>('/api/envios', {

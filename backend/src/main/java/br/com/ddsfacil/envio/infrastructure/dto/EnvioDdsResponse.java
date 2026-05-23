@@ -47,6 +47,9 @@ public class EnvioDdsResponse {
     @Schema(description = "Quantidade de lembretes automáticos já enviados", example = "1")
     private final int quantidadeLembretes;
 
+    @Schema(description = "Momento para o qual o envio foi agendado, se aplicável")
+    private final LocalDateTime momentoAgendado;
+
     public EnvioDdsResponse(
             Long id,
             Long funcionarioId,
@@ -59,7 +62,8 @@ public class EnvioDdsResponse {
             LocalDateTime momentoEnvio,
             LocalDateTime momentoConfirmacao,
             String mensagemErroEntrega,
-            int quantidadeLembretes
+            int quantidadeLembretes,
+            LocalDateTime momentoAgendado
     ) {
         this.id = id;
         this.funcionarioId = funcionarioId;
@@ -73,5 +77,6 @@ public class EnvioDdsResponse {
         this.momentoConfirmacao = momentoConfirmacao;
         this.mensagemErroEntrega = mensagemErroEntrega;
         this.quantidadeLembretes = quantidadeLembretes;
+        this.momentoAgendado = momentoAgendado;
     }
 }

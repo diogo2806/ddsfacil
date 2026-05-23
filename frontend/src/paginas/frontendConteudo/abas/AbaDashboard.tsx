@@ -117,6 +117,11 @@ export default function AbaDashboard() {
                               {envio.quantidadeLembretes} lembrete{envio.quantidadeLembretes === 1 ? '' : 's'} enviado{envio.quantidadeLembretes === 1 ? '' : 's'}
                             </span>
                         )}
+                        {envio.status === StatusEnvio.PENDENTE && envio.momentoAgendado && (
+                          <span className="text-xs text-blue-600">
+                            Agendado para {new Date(envio.momentoAgendado).toLocaleString('pt-BR')}
+                          </span>
+                        )}
                     </td>
                   </tr>
                 ))

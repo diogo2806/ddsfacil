@@ -16,6 +16,7 @@ type Props = {
 export default function AbaEnviarDds({ exibirNotificacao }: Props) {
   const [conteudoId, definirConteudoId] = useState<string>('');
   const [dataEnvio, definirDataEnvio] = useState<string>(dataAtual());
+  const [agendarPara, definirAgendarPara] = useState<string>('');
   const [funcionariosSelecionados, definirFuncionariosSelecionados] = useState<number[]>([]);
   const [opcaoObra, definirOpcaoObra] = useState<string>('');
   const [opcaoTipo, definirOpcaoTipo] = useState<string>('');
@@ -31,6 +32,7 @@ export default function AbaEnviarDds({ exibirNotificacao }: Props) {
       definirFuncionariosSelecionados([]);
       definirConteudoId('');
       definirDataEnvio(dataAtual());
+      definirAgendarPara('');
       definirMensagemSelecao('');
     },
     onErrorSave: (mensagem) => {
@@ -187,11 +189,21 @@ export default function AbaEnviarDds({ exibirNotificacao }: Props) {
     }
 
     const dataLimpa = DOMPurify.sanitize(dataEnvio, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }).replace(/[^0-9-]/g, '');
+    const agendamentoLimpo = DOMPurify.sanitize(agendarPara, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] }).replace(/[^0-9:T-]/g, '');
+
+    if (agendamentoLimpo && new Date(agendamentoLimpo).getTime() <= Date.now()) {
+      exibirNotificacao({
+        tipo: TipoNotificacao.ERRO,
+        mensagem: 'O horário de agendamento deve ser no futuro.',
+      });
+      return;
+    }
 
     mutacaoCriar.mutate({
       conteudoId: Number.parseInt(conteudoId, 10),
       funcionariosIds: funcionariosSelecionados,
       dataEnvio: dataLimpa || undefined,
+      agendarPara: agendamentoLimpo || undefined,
     });
   }
 
@@ -233,8 +245,27 @@ export default function AbaEnviarDds({ exibirNotificacao }: Props) {
             type="date"
             value={dataEnvio}
             onChange={(evento) => definirDataEnvio(evento.target.value)}
+            disabled={Boolean(agendarPara)}
+            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none disabled:bg-gray-100 disabled:text-gray-400"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="agendarPara" className="text-sm font-medium text-gray-700">
+            Agendar para (opcional)
+          </label>
+          <input
+            id="agendarPara"
+            type="datetime-local"
+            value={agendarPara}
+            onChange={(evento) => definirAgendarPara(evento.target.value)}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
           />
+          <p className="text-xs text-gray-500">
+            {agendarPara
+              ? 'O DDS será enviado automaticamente na data e hora escolhidas.'
+              : 'Deixe em branco para enviar imediatamente.'}
+          </p>
         </div>
 
         <button
@@ -242,7 +273,7 @@ export default function AbaEnviarDds({ exibirNotificacao }: Props) {
           className="w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
           disabled={mutacaoCriar.isPending}
         >
-          {mutacaoCriar.isPending ? 'Enviando...' : 'Enviar DDS'}
+          {mutacaoCriar.isPending ? 'Processando...' : agendarPara ? 'Agendar DDS' : 'Enviar DDS'}
         </button>
       </section>
 

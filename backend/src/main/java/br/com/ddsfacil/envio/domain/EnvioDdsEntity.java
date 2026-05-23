@@ -79,6 +79,9 @@ public class EnvioDdsEntity {
     @Column(name = "momento_ultimo_lembrete")
     private LocalDateTime momentoUltimoLembrete;
 
+    @Column(name = "momento_agendado")
+    private LocalDateTime momentoAgendado;
+
     public EnvioDdsEntity(
             FuncionarioEntity funcionarioEntity,
             ConteudoDdsEntity conteudo,
@@ -115,6 +118,10 @@ public class EnvioDdsEntity {
     public void registrarLembrete(LocalDateTime momento) {
         this.quantidadeLembretes += 1;
         this.momentoUltimoLembrete = momento;
+    }
+
+    public void definirAgendamento(LocalDateTime momentoAgendado) {
+        this.momentoAgendado = momentoAgendado;
     }
 
     public void registrarFalhaEntrega(String descricaoErro) {
